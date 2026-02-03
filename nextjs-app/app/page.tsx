@@ -1,4 +1,6 @@
 import { Card } from './nginx/components/Card';
+import { FeatureList } from './nginx/components/FeatureList';
+import { features } from './nginx/data/features';
 
 export default function Home() {
   return (
@@ -20,6 +22,7 @@ export default function Home() {
       <p className="text-sm text-gray-600">
         Mobile first layout with Tailwind.
       </p>
+      <FeatureList features={features} />
     </main>
   );
 }
