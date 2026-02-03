@@ -25,7 +25,7 @@ export default function RootLayout({
           </nav>
 
           <h1 className="text-lg font-semibold">
-            Dev Journey 🚀
+            Dev Journey — Week 2
           </h1>
         </header>
 
