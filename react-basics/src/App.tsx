@@ -4,12 +4,14 @@ import './App.css';
 import { Header } from './components/Header'
 import { Card } from './components/Card'
 import { Counter } from './components/Counter'
+import { tasks } from './data'
+import { TaskList } from './components/TaskList'
 
 function App() {
   return (
     <div style={{ padding:20}}>
-      <h1>Day 5 - useState</h1>
-      <Counter />
+      <h1>Day 6 - Lists & map</h1>
+      <TaskList tasks={tasks} />
     </div>
   );
 }
