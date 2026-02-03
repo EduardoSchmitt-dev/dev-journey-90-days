@@ -1,4 +1,5 @@
 import './globals.css';
+import Link from 'next/link';
 
 export const metadata = {
   title: 'Dev Journey',
@@ -13,8 +14,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-gray-50 text-gray-900">
-        <header className="p-4 bg-white shadow">
-          <h1 className="text-1g font-semibold">
+        <header className="p-4 bg-white shadow flex items-center justify-between">
+          <nav className="flex gap-4">
+           <Link href="/" className="font-semibold">
+             Home
+           </Link>
+           <Link href="/about" className="font-semibold">
+             About
+           </Link>
+          </nav>
+
+          <h1 className="text-lg font-semibold">
             Dev Journey 🚀
           </h1>
         </header>
