@@ -4,7 +4,7 @@ import { features } from './nginx/data/features';
 
 export default function Home() {
   return (
-    <main className="space-y-4">
+    <main className="space-y-6">
       <h2 className="text-xl font-bold">
         Week 2 - Next.js App Router 🚀
       </h2>

@@ -5,7 +5,14 @@ type FeatureListProps = {
 };
 
 export function FeatureList({ features }: FeatureListProps) {
-  return (
+  if (!features.length) {
+    return (
+      <p className="text-sm text-gray-500">
+        Loading features... 
+      </p>
+    );
+}
+   return (
     <div className="space-y-3">
       {features.map(feature => (
         <div
