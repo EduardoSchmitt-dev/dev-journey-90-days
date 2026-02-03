@@ -1,16 +1,16 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
-import { Header } from './components/Header'
-import { Card } from './components/Card'
-import { Counter } from './components/Counter'
-import { tasks } from './data'
-import { TaskList } from './components/TaskList'
+import { Counter } from './components/Counter';
+import { TaskList } from './components/TaskList';
+import { tasks } from './data';
 
 function App() {
   return (
-    <div style={{ padding:20}}>
-      <h1>Day 6 - Lists & map</h1>
+    <div style={{ padding: 20 }}>
+      <h1>Week 1 - React Fundamentals</h1>
+
+      <Counter />
+
       <TaskList tasks={tasks} />
     </div>
   );
