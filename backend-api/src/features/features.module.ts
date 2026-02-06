@@ -1,10 +1,16 @@
 import { Module } from '@nestjs/common';
-import { FeaturesService } from './features.service';
 import { FeaturesController } from './features.controller';
-import { FeaturesRepository } from './features.repository';
+import { FeaturesService } from './features.service';
+import { InMemoryFeaturesRepository } from './repositories/in-memory/features.repository';
 
 @Module({
   controllers: [FeaturesController],
-  providers: [FeaturesService, FeaturesRepository],
+  providers: [
+    FeaturesService,
+    {
+      provide: 'FeaturesRepository',
+      useClass: InMemoryFeaturesRepository,
+    },
+  ],
 })
 export class FeaturesModule {}
