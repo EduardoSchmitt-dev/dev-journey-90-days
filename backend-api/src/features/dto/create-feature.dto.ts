@@ -1,9 +1,11 @@
-export class CreateFeatureDto {
-  title: string;
-  description: string;
+import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 
-  constructor(title: string, description: string) {
-    this.title = title;
-    this.description = description;
-  }
+export class CreateFeatureDto {
+  @IsString()
+  @IsNotEmpty()
+  name!: string;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
 }

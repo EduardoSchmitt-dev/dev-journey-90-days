@@ -1,12 +1,13 @@
-import { Controller, Get } from '@nestjs/common';
-import { FeaturesService } from './features.service';
+import { Controller,Post, Body } from '@nestjs/common';
+import { CreateFeatureDto } from './dto/create-feature.dto'; 
 
 @Controller('features')
 export class FeaturesController {
-  constructor(private readonly service: FeaturesService) {}
-
-  @Get()
-  findAll() {
-    return this.service.findAll();
+  @Post()
+  create(@Body() createFeatureDto: CreateFeatureDto) {
+    return {
+      message: 'Feature criada com sucesso',
+      data: createFeatureDto
+    };
   }
 }
