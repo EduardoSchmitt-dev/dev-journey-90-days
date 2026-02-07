@@ -1,14 +1,12 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { FeaturesRepository } from './repositories/features.repository';
+import { Injectable } from '@nestjs/common';
+import { CreateFeatureDto } from './dto/create-feature.dto';
 
 @Injectable()
 export class FeaturesService {
-  constructor(
-    @Inject('FeaturesRepository')
-    private readonly repository: FeaturesRepository,
-  ) {}
-
-  findAll() {
-    return this.repository.findAll();
+  create(createFeatureDto: CreateFeatureDto) {
+    return {
+      message: 'Feature created successfully',
+      data: createFeatureDto,
+    };
   }
 }
