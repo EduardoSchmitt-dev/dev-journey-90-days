@@ -1,15 +1,14 @@
-import { Feature, FeaturesRepository } from '../features.repository';
+import { FeatureEntity, FeaturesRepository } from '../../features.repository';
 
-export class InMemoryFeaturesRepository implements FeaturesRepository {
-  private features: Feature[] = [
-    {
-      id: '1',
-      name: 'Feature A',
-      description: 'Exemplo em memória',
-    },
-  ];
+export class InMemoryFeaturesRepository extends FeaturesRepository {
+  private features: FeatureEntity[] = [];
 
-  async findAll(): Promise<Feature[]> {
+  create(feature: FeatureEntity): FeatureEntity {
+    this.features.push(feature);
+    return feature;
+  }
+
+  findAll(): FeatureEntity[] {
     return this.features;
   }
 }

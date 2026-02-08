@@ -1,29 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { CreateFeatureDto } from './dto/create-feature.dto';
+import { FeaturesRepository, FeatureEntity } from './features.repository';
 
 @Injectable()
 export class FeaturesService {
-  private features: {
-    id: number;
-    name: string;
-    description?: string;
-    createdAt: Date;
-  }[] = [];
+  constructor(
+    private readonly featuresRepository: FeaturesRepository,
+  ) {}
 
-  create(createFeatureDto: CreateFeatureDto) {
-    const feature = {
+  create(createFeatureDto: CreateFeatureDto): FeatureEntity {
+    const feature: FeatureEntity = {
       id: Date.now(),
       name: createFeatureDto.name,
       description: createFeatureDto.description,
       createdAt: new Date(),
     };
 
-    this.features.push(feature);
-
-    return feature;
+    return this.featuresRepository.create(feature);
   }
 
-  findAll() {
-    return this.features;
+  findAll(): FeatureEntity[] {
+    return this.featuresRepository.findAll();
   }
 }

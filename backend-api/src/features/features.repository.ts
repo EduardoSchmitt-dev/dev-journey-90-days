@@ -1,15 +1,11 @@
-export interface Feature {
+export type FeatureEntity = {
   id: number;
-  title: string;
-}
+  name: string;
+  description?: string;
+  createdAt: Date;
+};
 
-export class FeaturesRepository {
-  private features: Feature[] = [
-    { id: 1, title: 'Feature A' },
-    { id: 2, title: 'Feature B' },
-  ];
-
-  findAll() {
-    return this.features;
-  }
+export abstract class FeaturesRepository {
+  abstract create(feature: FeatureEntity): FeatureEntity;
+  abstract findAll(): FeatureEntity[];
 }

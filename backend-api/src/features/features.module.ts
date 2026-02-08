@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { FeaturesController } from './features.controller';
 import { FeaturesService } from './features.service';
+import { FeaturesRepository } from './features.repository';
 import { InMemoryFeaturesRepository } from './repositories/in-memory/features.repository';
 
 @Module({
@@ -8,7 +9,7 @@ import { InMemoryFeaturesRepository } from './repositories/in-memory/features.re
   providers: [
     FeaturesService,
     {
-      provide: 'FeaturesRepository',
+      provide: FeaturesRepository,
       useClass: InMemoryFeaturesRepository,
     },
   ],
