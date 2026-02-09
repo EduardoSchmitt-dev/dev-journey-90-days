@@ -8,7 +8,7 @@ export class FeaturesService {
     private readonly featuresRepository: FeaturesRepository,
   ) {}
 
-  create(createFeatureDto: CreateFeatureDto): FeatureEntity {
+  async create(createFeatureDto: CreateFeatureDto): Promise<FeatureEntity> {
     const feature: FeatureEntity = {
       id: Date.now(),
       name: createFeatureDto.name,
@@ -16,10 +16,10 @@ export class FeaturesService {
       createdAt: new Date(),
     };
 
-    return this.featuresRepository.create(feature);
+    return await this.featuresRepository.create(feature);
   }
 
-  findAll(): FeatureEntity[] {
-    return this.featuresRepository.findAll();
+  async findAll(): Promise<FeatureEntity[]> {
+    return await this.featuresRepository.findAll();
   }
 }

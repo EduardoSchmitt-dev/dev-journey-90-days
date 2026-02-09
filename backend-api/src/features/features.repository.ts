@@ -6,6 +6,6 @@ export type FeatureEntity = {
 };
 
 export abstract class FeaturesRepository {
-  abstract create(feature: FeatureEntity): FeatureEntity;
-  abstract findAll(): FeatureEntity[];
+  abstract create(feature: FeatureEntity): Promise<FeatureEntity>;
+  abstract findAll(): Promise<FeatureEntity[]>;
 }

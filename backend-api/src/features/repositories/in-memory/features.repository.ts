@@ -3,12 +3,12 @@ import { FeatureEntity, FeaturesRepository } from '../../features.repository';
 export class InMemoryFeaturesRepository extends FeaturesRepository {
   private features: FeatureEntity[] = [];
 
-  create(feature: FeatureEntity): FeatureEntity {
+  async create(feature: FeatureEntity): Promise<FeatureEntity> {
     this.features.push(feature);
     return feature;
   }
 
-  findAll(): FeatureEntity[] {
+  async findAll(): Promise<FeatureEntity[]> {
     return this.features;
   }
 }
