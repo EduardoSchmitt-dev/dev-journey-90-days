@@ -1,11 +1,48 @@
-export type FeatureEntity = {
+export interface FeatureEntity {
   id: number;
   name: string;
   description?: string;
   createdAt: Date;
-};
+  deletedAt?: Date | null;
+}
 
-export abstract class FeaturesRepository {
-  abstract create(feature: FeatureEntity): Promise<FeatureEntity>;
-  abstract findAll(): Promise<FeatureEntity[]>;
+export class FeaturesRepository {
+  private features: FeatureEntity[] = [];
+
+  async create(feature: FeatureEntity): Promise<FeatureEntity> {
+    this.features.push(feature);
+    return feature;
+  }
+
+  async findAll(): Promise<FeatureEntity[]> {
+    return this.features.filter(
+      feature => !feature.deletedAt,
+    );
+  }
+  
+  async findById(id: number): Promise<FeatureEntity | null> {
+    return this.features.find(feature => feature.id === id) ?? null;
+  }
+
+  async softDelete(id: number): Promise<void> {
+  const feature = await this.findById(id);
+
+  if (!feature) {
+    return;
+  }
+
+  feature.deletedAt = new Date();
+ }
+
+  async update(
+    id: number,
+    updatedFeature: FeatureEntity,
+  ): Promise<FeatureEntity> {
+    const index = this.features.findIndex(
+      feature => feature.id === id,
+    );
+    
+    this.features[index] = updatedFeature;
+    return updatedFeature;
+  }
 }
