@@ -1,16 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { CreateFeatureDto } from './dto/create-feature.dto';
-import { FeaturesRepository, FeatureEntity } from './features.repository';
-import { NotFoundException } from '@nestjs/common';
 import { UpdateFeatureDto } from './dto/update-feature.dto';
 import { FindFeaturesDto } from './dto/find-features.dto';
+import { IFeaturesRepository } from './repositories/features.repository.interface';
+import { FEATURES_REPOSITORY } from './repositories/features.repository.token';
+import { FeatureEntity } from './features.repository';
+
+
 
 @Injectable()
 export class FeaturesService {
   constructor(
-    private readonly featuresRepository: FeaturesRepository,
-  ) {}
-  
+  @Inject(FEATURES_REPOSITORY)
+  private readonly featuresRepository: IFeaturesRepository,
+) {}
   
   async create(createFeatureDto: CreateFeatureDto): Promise<FeatureEntity> {
     const feature: FeatureEntity = {
