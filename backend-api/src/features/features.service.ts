@@ -17,11 +17,13 @@ export class FeaturesService {
   
   async create(createFeatureDto: CreateFeatureDto): Promise<FeatureEntity> {
     const feature: FeatureEntity = {
-      id: Date.now(),
-      name: createFeatureDto.name,
-      description: createFeatureDto.description,
-      createdAt: new Date(),
-    };
+  id: Date.now(),
+  name: createFeatureDto.name,
+  description: createFeatureDto.description ?? null,
+  createdAt: new Date(),
+  deletedAt: null,
+};
+
 
     return await this.featuresRepository.create(feature);
   }

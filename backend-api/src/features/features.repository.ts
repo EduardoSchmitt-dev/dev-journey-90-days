@@ -1,10 +1,11 @@
 export interface FeatureEntity {
   id: number;
   name: string;
-  description?: string;
+  description: string | null;
   createdAt: Date;
-  deletedAt?: Date | null;
+  deletedAt: Date | null;
 }
+
 
 export class FeaturesRepository {
   protected features: FeatureEntity[] = [];

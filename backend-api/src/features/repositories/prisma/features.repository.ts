@@ -1,32 +1,63 @@
 import { Injectable } from '@nestjs/common';
-import { FeatureEntity, FeaturesRepository } from '../../features.repository';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { IFeaturesRepository } from '../features.repository.interface';
+import { FeatureEntity } from '../../features.repository';
 
 @Injectable()
-export class PrismaFeaturesRepository extends FeaturesRepository {
-  constructor(private readonly prisma: PrismaService) {
-    super();
-  }
-async create(feature: FeatureEntity): Promise<FeatureEntity> {
-  const created = await this.prisma.feature.create({
+export class PrismaFeaturesRepository implements IFeaturesRepository {
+  constructor(
+    private readonly prisma: PrismaService,
+  ) {}
+
+  async create(feature: FeatureEntity): Promise<FeatureEntity> {
+  return this.prisma.feature.create({
     data: {
+      id: feature.id,
       name: feature.name,
       description: feature.description ?? null,
+      createdAt: feature.createdAt,
     },
   });
-
-  return {
-    ...created,
-    description: created.description ?? undefined,
-  };
 }
 
-async findAll(): Promise<FeatureEntity[]> {
-  const features = await this.prisma.feature.findMany();
 
-  return features.map((feature) => ({
-    ...feature,
-    description: feature.description ?? undefined,
-  }));
- }
+  async findAll(): Promise<FeatureEntity[]> {
+    return this.prisma.feature.findMany({
+      where: {
+        deletedAt: null,
+      },
+    });
+  }
+
+  async findById(id: number): Promise<FeatureEntity | null> {
+    return this.prisma.feature.findFirst({
+      where: {
+        id,
+        deletedAt: null,
+      },
+    });
+  }
+
+  async update(
+    id: number,
+    feature: FeatureEntity,
+  ): Promise<FeatureEntity> {
+    return this.prisma.feature.update({
+      where: { id },
+      data: {
+        name: feature.name,
+        description: feature.description,
+        deletedAt: feature.deletedAt ?? null,
+      },
+    });
+  }
+
+  async softDelete(id: number): Promise<void> {
+    await this.prisma.feature.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+  }
 }
