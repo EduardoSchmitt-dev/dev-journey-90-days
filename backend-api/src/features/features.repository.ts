@@ -7,7 +7,7 @@ export interface FeatureEntity {
 }
 
 export class FeaturesRepository {
-  private features: FeatureEntity[] = [];
+  protected features: FeatureEntity[] = [];
 
   async create(feature: FeatureEntity): Promise<FeatureEntity> {
     this.features.push(feature);

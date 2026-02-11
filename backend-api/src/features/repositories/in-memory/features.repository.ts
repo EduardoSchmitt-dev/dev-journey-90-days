@@ -1,7 +1,7 @@
 import { FeatureEntity, FeaturesRepository } from '../../features.repository';
 
 export class InMemoryFeaturesRepository extends FeaturesRepository {
-  private features: FeatureEntity[] = [];
+  protected features: FeatureEntity[] = [];
 
   async create(feature: FeatureEntity): Promise<FeatureEntity> {
     this.features.push(feature);

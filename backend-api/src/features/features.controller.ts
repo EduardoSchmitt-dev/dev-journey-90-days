@@ -1,10 +1,12 @@
-import { Controller, Post, Get, Body, Param,  Patch, Put, ParseIntPipe, Delete, } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param,  Patch, Put, ParseIntPipe, Delete, Query } from '@nestjs/common';
 import { CreateFeatureDto } from './dto/create-feature.dto';
 import { UpdateFeatureDto } from './dto/update-feature.dto';
 import { FeaturesService } from './features.service';
+import { FindFeaturesDto } from './dto/find-features.dto';
 
-@Controller('features')
-export class FeaturesController {
+
+ @Controller('features')
+ export class FeaturesController {
   constructor(
     private readonly featuresService: FeaturesService,
   ) {}
@@ -14,10 +16,13 @@ export class FeaturesController {
     return this.featuresService.create(createFeatureDto);
   }
 
-  @Get()
-  findAll() {
-    return this.featuresService.findAll();
-  }
+ @Get()
+ findAll(
+  @Query() query: FindFeaturesDto,
+ ) {
+  return this.featuresService.findAll(query);
+ }
+
 
   @Put(':id')
   updatePut(
@@ -39,6 +44,6 @@ export class FeaturesController {
   remove(
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this,this.featuresService.remove(id);
+    return this.featuresService.remove(id);
   }
 }
