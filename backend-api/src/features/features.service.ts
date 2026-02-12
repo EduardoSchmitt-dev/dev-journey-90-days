@@ -15,17 +15,8 @@ export class FeaturesService {
   private readonly featuresRepository: IFeaturesRepository,
 ) {}
   
-  async create(createFeatureDto: CreateFeatureDto): Promise<FeatureEntity> {
-    const feature: FeatureEntity = {
-  id: Date.now(),
-  name: createFeatureDto.name,
-  description: createFeatureDto.description ?? null,
-  createdAt: new Date(),
-  deletedAt: null,
-};
-
-
-    return await this.featuresRepository.create(feature);
+  async create(data: CreateFeatureDto) {
+  return this.featuresRepository.create(data);
   }
 
 
@@ -58,7 +49,6 @@ export class FeaturesService {
       },
     };
   }
-
 
   async remove(id: number): Promise<void> {
   const feature = await this.featuresRepository.findById(id);

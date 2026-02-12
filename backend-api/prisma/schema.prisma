@@ -8,10 +8,11 @@ datasource db {
 }
 
 model Feature {
-  id          Int       @id
-  name        String
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
   description String?
-  createdAt   DateTime
-  deletedAt   DateTime?
+  createdAt DateTime @default(now())
+  deletedAt DateTime?
 }
+
 

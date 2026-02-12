@@ -1,8 +1,9 @@
 import { FeatureEntity } from "../features.repository";
+import { CreateFeatureDto } from '../dto/create-feature.dto';
 
 
 export interface IFeaturesRepository { 
-  create(feature: FeatureEntity): Promise<FeatureEntity>;
+  create(data: CreateFeatureDto): Promise<FeatureEntity>;
   findAll(): Promise<FeatureEntity[]>;
   findById(id: number): Promise<FeatureEntity | null>;
   update(id: number, feature: FeatureEntity): Promise<FeatureEntity>;
