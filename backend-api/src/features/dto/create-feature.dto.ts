@@ -1,11 +1,17 @@
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsString, IsOptional, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+import { FeatureSettingsDto } from './feature-settings.dto';
+
 
 export class CreateFeatureDto {
   @IsString()
-  @IsNotEmpty()
   name!: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   description?: string;
+
+  @ValidateNested()
+  @Type(() => FeatureSettingsDto)
+  settings!: FeatureSettingsDto;
 }

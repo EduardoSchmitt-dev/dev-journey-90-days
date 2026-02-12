@@ -3,9 +3,10 @@ import { CreateFeatureDto } from './dto/create-feature.dto';
 import { UpdateFeatureDto } from './dto/update-feature.dto';
 import { FeaturesService } from './features.service';
 import { FindFeaturesDto } from './dto/find-features.dto';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 
 
- @Controller('features')
+@Controller('features')
  export class FeaturesController {
   constructor(
     private readonly featuresService: FeaturesService,
@@ -17,10 +18,8 @@ import { FindFeaturesDto } from './dto/find-features.dto';
   }
 
  @Get()
- findAll(
-  @Query() query: FindFeaturesDto,
- ) {
-  return this.featuresService.findAll(query);
+ findAll(@Query() query: PaginationQueryDto) {
+  return query; // só pra testar primeiro 
  }
 
 
