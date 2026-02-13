@@ -4,6 +4,13 @@ import { UpdateFeatureDto } from './dto/update-feature.dto';
 import { FeaturesService } from './features.service';
 import { FindFeaturesDto } from './dto/find-features.dto';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
+import { UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CurrentUser } from '../auth/current-user.decorator';
+import { AuthUser } from '../auth/interfaces/auth-user.interface';
+
+
+
 
 
 @Controller('features')
@@ -17,11 +24,15 @@ import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
     return this.featuresService.create(createFeatureDto);
   }
 
+ @UseGuards(JwtAuthGuard)
  @Get()
- findAll(@Query() query: PaginationQueryDto) {
-  return query; // só pra testar primeiro 
- }
-
+ findAll(
+  @Query() query: FindFeaturesDto,
+  @CurrentUser() user: AuthUser,
+ ) {
+  console.log(user.userId); // agora com autocomplete
+  return this.featuresService.findAll(query);
+}
 
   @Put(':id')
   updatePut(
