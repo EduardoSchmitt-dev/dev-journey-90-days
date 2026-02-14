@@ -14,6 +14,8 @@ export class AuthService {
     readonly jwtService: JwtService, 
     )  {}
 
+  
+
   async hashPassword(password: string): Promise<string> {
     const saltRounds = 10;
     return bcrypt.hash(password, saltRounds);
@@ -46,12 +48,28 @@ export class AuthService {
 
   const payload = { sub: user.id, email: user.email };
 
-  const access_token = this.jwtService.sign(payload);
+  const access_token = this.jwtService.sign(payload, {
+    expiresIn: '15m',
+  });
+
+  const refresh_token = this.jwtService.sign(payload, {
+    expiresIn: '7d',
+  });
+
+  // 🔐 Hashear refresh token antes de salvar
+  const hashedRefreshToken = await this.hashPassword(refresh_token);
+
+  await this.prisma.user.update({
+    where: { id: user.id },
+    data: { refreshToken: hashedRefreshToken },
+  });
 
   return {
     access_token,
+    refresh_token,
   };
 }
+
 
    async register(data: RegisterDto) {
     const hashedPassword = await this.hashPassword(data.password);
@@ -69,4 +87,40 @@ export class AuthService {
       createdAt: user.createdAt,
     };
   }
+  async refreshToken(userId: number, refreshToken: string) {
+  const user = await this.prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user || !user.refreshToken) {
+    throw new UnauthorizedException('Access denied');
+  }
+
+  const isRefreshTokenValid = await this.comparePassword(
+    refreshToken,
+    user.refreshToken,
+  );
+
+  if (!isRefreshTokenValid) {
+    throw new UnauthorizedException('Access denied');
+  }
+
+  const payload = { sub: user.id, email: user.email };
+
+  const newAccessToken = this.jwtService.sign(payload, {
+    expiresIn: '15m',
+  });
+
+  return {
+    access_token: newAccessToken,
+  };
+ }
+  async logout(userId: number) {
+  await this.prisma.user.update({
+    where: { id: userId },
+    data: { refreshToken: null },
+  });
+
+  return { message: 'Logged out successfully' };
+ }
 }
