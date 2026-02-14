@@ -12,16 +12,18 @@ export class PrismaFeaturesRepository implements IFeaturesRepository {
     private readonly prisma: PrismaService,
   ) {}
 
-  async create(data: CreateFeatureDto): Promise<FeatureEntity> {
+  async create(data: FeatureEntity): Promise<FeatureEntity> {
   const created = await this.prisma.feature.create({
     data: {
       name: data.name,
-      description: data.description ?? null,
+      description: data.description,
+      userId: data.userId,
     },
   });
 
   return created;
 }
+
 
 
   async findAll(): Promise<FeatureEntity[]> {
@@ -54,7 +56,15 @@ export class PrismaFeaturesRepository implements IFeaturesRepository {
       },
     });
   }
-
+   async countByUser(userId: number): Promise<number> {
+  return this.prisma.feature.count({
+    where: {
+      userId,
+      deletedAt: null,
+    },
+  });
+}
+  
   async softDelete(id: number): Promise<void> {
     await this.prisma.feature.update({
       where: { id },

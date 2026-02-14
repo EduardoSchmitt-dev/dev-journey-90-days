@@ -71,22 +71,32 @@ export class AuthService {
 }
 
 
-   async register(data: RegisterDto) {
-    const hashedPassword = await this.hashPassword(data.password);
+  async register(data: RegisterDto) {
+  const hashedPassword = await this.hashPassword(data.password);
 
-    const user = await this.prisma.user.create({
-      data: {
-        email: data.email,
-        password: hashedPassword,
-      },
-    });
-    
-     return {
-      id: user.id,
-      email: user.email,
-      createdAt: user.createdAt,
-    };
+  const freePlan = await this.prisma.plan.findUnique({
+    where: { name: 'Free' },
+  });
+
+  if (!freePlan) {
+    throw new Error('Free plan not found');
   }
+
+  const user = await this.prisma.user.create({
+    data: {
+      email: data.email,
+      password: hashedPassword,
+      planId: freePlan.id,
+    },
+  });
+
+  return {
+    id: user.id,
+    email: user.email,
+    createdAt: user.createdAt,
+  };
+}
+
   async refreshToken(userId: number, refreshToken: string) {
   const user = await this.prisma.user.findUnique({
     where: { id: userId },
@@ -123,4 +133,5 @@ export class AuthService {
 
   return { message: 'Logged out successfully' };
  }
+
 }

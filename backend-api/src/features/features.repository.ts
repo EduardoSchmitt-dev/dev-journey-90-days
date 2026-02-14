@@ -2,9 +2,11 @@ export interface FeatureEntity {
   id: number;
   name: string;
   description: string | null;
+  userId: number;  
   createdAt: Date;
   deletedAt: Date | null;
 }
+
 
 
 export class FeaturesRepository {
@@ -23,6 +25,12 @@ export class FeaturesRepository {
   
   async findById(id: number): Promise<FeatureEntity | null> {
     return this.features.find(feature => feature.id === id) ?? null;
+  }
+  
+  async countByUser(userId: number): Promise<number> {
+  return this.features.filter(
+    (feature) => feature.userId === userId && !feature.deletedAt
+  ).length;
   }
 
   async softDelete(id: number): Promise<void> {
@@ -46,4 +54,5 @@ export class FeaturesRepository {
     this.features[index] = updatedFeature;
     return updatedFeature;
   }
+  
 }

@@ -1,10 +1,9 @@
-import { Controller, Post, Get, Body, Param,  Patch, Put, ParseIntPipe, Delete, Query } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param,  Patch, Put, ParseIntPipe, Delete, Query, UseGuards } from '@nestjs/common';
 import { CreateFeatureDto } from './dto/create-feature.dto';
 import { UpdateFeatureDto } from './dto/update-feature.dto';
 import { FeaturesService } from './features.service';
 import { FindFeaturesDto } from './dto/find-features.dto';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
-import { UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { AuthUser } from '../auth/interfaces/auth-user.interface';
@@ -19,19 +18,13 @@ import { AuthUser } from '../auth/interfaces/auth-user.interface';
     private readonly featuresService: FeaturesService,
   ) {}
 
-  @Post()
-  create(@Body() createFeatureDto: CreateFeatureDto) {
-    return this.featuresService.create(createFeatureDto);
-  }
-
- @UseGuards(JwtAuthGuard)
- @Get()
- findAll(
-  @Query() query: FindFeaturesDto,
+ @Post()
+@UseGuards(JwtAuthGuard)
+create(
+  @Body() createFeatureDto: CreateFeatureDto,
   @CurrentUser() user: AuthUser,
- ) {
-  console.log(user.userId); // agora com autocomplete
-  return this.featuresService.findAll(query);
+) {
+  return this.featuresService.create(user.userId, createFeatureDto);
 }
 
   @Put(':id')

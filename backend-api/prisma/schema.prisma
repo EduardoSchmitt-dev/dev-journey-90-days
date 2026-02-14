@@ -8,20 +8,38 @@ datasource db {
 }
 
 model Feature {
+   id          Int      @id @default(autoincrement())
+  name         String
+  description  String?
+  userId       Int
+  createdAt    DateTime @default(now())
+  deletedAt    DateTime?
+
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Plan {
   id        Int      @id @default(autoincrement())
   name      String   @unique
-  description String?
-  createdAt DateTime @default(now())
-  deletedAt DateTime?
-}
-
-
-model User {
-  id           Int       @id @default(autoincrement())
-  email        String    @unique
-  password     String
-  refreshToken String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  users     User[]
 }
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  password     String
+  refreshToken String?
+  planId       Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  features Feature[]
+
+
+  plan         Plan    @relation(fields: [planId], references: [id])
+}
+
+
 
