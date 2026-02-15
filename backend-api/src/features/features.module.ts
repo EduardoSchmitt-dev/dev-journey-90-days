@@ -11,9 +11,10 @@ import { FEATURES_REPOSITORY } from './repositories/features.repository.token';
   providers: [
     FeaturesService,
     {
-     provide: FEATURES_REPOSITORY,
-     useClass: PrismaFeaturesRepository,
+      provide: FEATURES_REPOSITORY,
+      useClass: PrismaFeaturesRepository,
     },
   ],
-}) 
+})
 export class FeaturesModule {}
+

@@ -7,9 +7,8 @@ import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { AuthUser } from '../auth/interfaces/auth-user.interface';
-
-
-
+import { PlanGuard } from '../common/guards/plan.guard';
+import { PlanLimit } from '../common/decorators/plan-limit.decorator';
 
 
 @Controller('features')
@@ -19,13 +18,15 @@ import { AuthUser } from '../auth/interfaces/auth-user.interface';
   ) {}
 
  @Post()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PlanGuard)
+@PlanLimit(3)
 create(
   @Body() createFeatureDto: CreateFeatureDto,
   @CurrentUser() user: AuthUser,
 ) {
   return this.featuresService.create(user.userId, createFeatureDto);
 }
+
 
   @Put(':id')
   updatePut(

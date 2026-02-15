@@ -5,7 +5,6 @@ import { FindFeaturesDto } from './dto/find-features.dto';
 import { IFeaturesRepository } from './repositories/features.repository.interface';
 import { FEATURES_REPOSITORY } from './repositories/features.repository.token';
 import { FeatureEntity } from './features.repository';
-import { PrismaService } from '../prisma/prisma.service';
 
 
 
@@ -14,29 +13,9 @@ export class FeaturesService {
   constructor(
   @Inject(FEATURES_REPOSITORY)
   private readonly featuresRepository: IFeaturesRepository,
-  private readonly prisma: PrismaService,
 ) {}
   
   async create(userId: number, data: CreateFeatureDto) {
-  const user = await this.prisma.user.findUnique({
-    where: { id: userId },
-    include: { plan: true },
-  });
-
-  if (!user) {
-    throw new NotFoundException('User not found');
-  }
-
-  if (user.plan.name === 'Free') {
-    const count = await this.featuresRepository.countByUser(userId);
-
-    if (count >= 3) {
-      throw new ForbiddenException(
-        'Free plan limit reached. Upgrade your plan.',
-      );
-    }
-  }
-
   const newFeature = {
     id: Date.now(),
     name: data.name,
