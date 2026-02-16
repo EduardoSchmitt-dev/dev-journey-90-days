@@ -1,17 +1,20 @@
 import { IsString, IsOptional, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { FeatureSettingsDto } from './feature-settings.dto';
+import { ApiProperty } from '@nestjs/swagger';
 
 
 export class CreateFeatureDto {
-  @IsString()
+  @ApiProperty({
+    example: 'Feature A',
+    description: 'Feature name',
+  })
   name!: string;
 
-  @IsOptional()
-  @IsString()
+  @ApiProperty({
+    example: 'Description of the feature',
+    required: false,
+  })
   description?: string;
-
-  @ValidateNested()
-  @Type(() => FeatureSettingsDto)
-  settings!: FeatureSettingsDto;
 }
+

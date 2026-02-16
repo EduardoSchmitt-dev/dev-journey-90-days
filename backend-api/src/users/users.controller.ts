@@ -3,11 +3,26 @@ import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { AuthUser } from '../auth/interfaces/auth-user.interface';
+import { ApiTags, ApiBearerAuth, ApiBody, ApiResponse } from '@nestjs/swagger';
+
 
 @Controller('users')
+@ApiTags('Users')
+@ApiBearerAuth('access-token')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+@ApiBody({
+  schema: {
+    example: {
+      planName: 'Pro',
+    },
+  },
+})
+@ApiResponse({
+  status: 200,
+  description: 'Plan upgraded successfuly',
+})
   @Patch('me/plan')
   @UseGuards(JwtAuthGuard)
   upgradePlan(

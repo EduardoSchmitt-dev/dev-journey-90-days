@@ -9,8 +9,12 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { AuthUser } from '../auth/interfaces/auth-user.interface';
 import { PlanGuard } from '../common/guards/plan.guard';
 import { PlanLimit } from '../common/decorators/plan-limit.decorator';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
 
+@Controller('features')
+@ApiTags('Features')
+@ApiBearerAuth('access-token')
 @Controller('features')
  export class FeaturesController {
   constructor(

@@ -5,9 +5,11 @@ import { LoginDto } from './dto/login.dto'
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { CurrentUser } from './current-user.decorator';
 import { AuthUser } from './interfaces/auth-user.interface';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
 
-@Controller('auth')
+@Controller('auth') 
+@ApiTags('Auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
