@@ -6,10 +6,14 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { CurrentUser } from './current-user.decorator';
 import { AuthUser } from './interfaces/auth-user.interface';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { version } from 'os';
+import { Throttle } from '@nestjs/throttler';
 
-
-@Controller('auth') 
-@ApiTags('Auth')
+@Controller({ 
+  path: 'auth', 
+  version: '1',
+})
+  @ApiTags('Auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -19,8 +23,9 @@ export class AuthController {
    }
 
    @Post('login')
-   async login(@Body() data: LoginDto) {
-     return this.authService.login(data);
+   @Throttle({ default: { limit: 5, ttl: 60000 } })
+   login(@Body() dto: LoginDto) {
+     return this.authService.login(dto);
   }
 
   @Post('refresh')

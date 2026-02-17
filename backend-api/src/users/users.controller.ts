@@ -4,9 +4,13 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { AuthUser } from '../auth/interfaces/auth-user.interface';
 import { ApiTags, ApiBearerAuth, ApiBody, ApiResponse } from '@nestjs/swagger';
+import { version } from 'os';
 
 
-@Controller('users')
+@Controller({
+  path: 'users',
+  version: '1',
+})
 @ApiTags('Users')
 @ApiBearerAuth()
 export class UsersController {

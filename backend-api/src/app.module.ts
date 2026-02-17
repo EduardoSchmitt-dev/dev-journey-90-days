@@ -1,21 +1,45 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+
 import { FeaturesModule } from './features/features.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
-import { PlanGuard } from './common/guards/plan.guard';
-
+import { LoggerModule } from 'nestjs-pino';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        level: 'info',
+        genReqId: (req) => {
+          return req.headers['x-request-id'] || require('crypto').randomUUID();
+        },
+        transport: { 
+          target: 'pino-pretty',
+          options: {
+            singleLine: true,
+          },
+         },
+        },
+      }),
+
+      ThrottlerModule.forRoot({
+        throttlers: [
+          { ttl: 60,
+            limit: 20,
+          },
+        ],
+      }),
     FeaturesModule,
     AuthModule,
     UsersModule,
   ],
-  providers: [PlanGuard],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
-

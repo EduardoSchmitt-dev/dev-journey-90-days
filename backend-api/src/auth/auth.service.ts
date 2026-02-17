@@ -1,20 +1,22 @@
 import * as bcrypt from 'bcrypt';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { JwtService } from '@nestjs/jwt';
 import { UnauthorizedException } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
-
+import { PinoLogger } from 'nestjs-pino';
 
 @Injectable()
-export class AuthService { 
-  constructor (
+export class AuthService {
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly logger: PinoLogger,
     private readonly prisma: PrismaService,
-    readonly jwtService: JwtService, 
-    )  {}
+  ) {
+    this.logger.setContext(AuthService.name);
+  }
 
-  
 
   async hashPassword(password: string): Promise<string> {
     const saltRounds = 10;
@@ -27,13 +29,19 @@ export class AuthService {
   ): Promise<boolean> {
     return bcrypt.compare(password, hashedPassword);
   }
-  
+ 
   async login(data: LoginDto) {
+  this.logger.info({ email: data.email }, 'Login attempt');
+
   const user = await this.prisma.user.findUnique({
     where: { email: data.email },
   });
 
   if (!user) {
+    this.logger.warn(
+      { email: data.email },
+      'Login failed - user not found',
+    );
     throw new UnauthorizedException('Invalid credentials');
   }
 
@@ -43,6 +51,10 @@ export class AuthService {
   );
 
   if (!isPasswordValid) {
+    this.logger.warn(
+      { userId: user.id },
+      'Login failed - invalid password',
+    );
     throw new UnauthorizedException('Invalid credentials');
   }
 
@@ -56,7 +68,6 @@ export class AuthService {
     expiresIn: '7d',
   });
 
-  // 🔐 Hashear refresh token antes de salvar
   const hashedRefreshToken = await this.hashPassword(refresh_token);
 
   await this.prisma.user.update({
@@ -64,11 +75,17 @@ export class AuthService {
     data: { refreshToken: hashedRefreshToken },
   });
 
+  this.logger.info(
+    { userId: user.id },
+    'Login successful',
+  );
+
   return {
     access_token,
     refresh_token,
   };
 }
+
 
 
   async register(data: RegisterDto) {

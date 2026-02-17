@@ -12,14 +12,19 @@ import { PlanLimit } from '../common/decorators/plan-limit.decorator';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
 
-
 @ApiTags('Features')
 @ApiBearerAuth()
-@Controller('features')
+@Controller({
+  path: 'features',
+  version: '1',
+})
  export class FeaturesController {
   constructor(
     private readonly featuresService: FeaturesService,
   ) {}
+
+
+
 
 @Post()
 @ApiBearerAuth()
@@ -31,6 +36,12 @@ create(
 ) {
   return this.featuresService.create(user.userId, createFeatureDto);
 }
+
+@Get()
+findAll(@Query() query: FindFeaturesDto) {
+  return this.featuresService.findAll(query);
+}
+
 
 
 
