@@ -37,16 +37,12 @@ async function bootstrap() {
   app.useGlobalFilters(new GlobalExceptionFilter());
 
   const config = new DocumentBuilder()
-    .setTitle('Saas Feature Control API')
-    .setDescription('Multi-tenant SaaS API with plan-based feature limits (Free: 3features, Pro: unlimited).',)
-    .setVersion('1.0')
-    .addBearerAuth(
-      { type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-      },
-       'acess-token', )
-    .build();
+  .setTitle('Saas Feature Control API')
+  .setDescription('Multi-tenant SaaS API with plan-based feature limits (Free: 3 features, Pro: unlimited).')
+  .setVersion('1.0')
+  .addBearerAuth()
+  .build();
+
 
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('docs', app, document);

@@ -12,16 +12,17 @@ import { PlanLimit } from '../common/decorators/plan-limit.decorator';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
 
-@Controller('features')
+
 @ApiTags('Features')
-@ApiBearerAuth('access-token')
+@ApiBearerAuth()
 @Controller('features')
  export class FeaturesController {
   constructor(
     private readonly featuresService: FeaturesService,
   ) {}
 
- @Post()
+@Post()
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard, PlanGuard)
 @PlanLimit(3)
 create(
@@ -30,6 +31,7 @@ create(
 ) {
   return this.featuresService.create(user.userId, createFeatureDto);
 }
+
 
 
   @Put(':id')
