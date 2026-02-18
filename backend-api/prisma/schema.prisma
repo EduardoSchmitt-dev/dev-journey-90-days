@@ -8,14 +8,14 @@ datasource db {
 }
 
 model Feature {
-   id          Int      @id @default(autoincrement())
-  name         String
-  description  String?
-  userId       Int
-  createdAt    DateTime @default(now())
-  deletedAt    DateTime?
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  userId      Int
+  createdAt   DateTime  @default(now())
+  deletedAt   DateTime?
 
-  user        User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
 
 model Plan {
@@ -24,23 +24,35 @@ model Plan {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users     User[]
+  users User[]
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  email        String   @unique
-  password     String
-  refreshToken String?
-  refreshTokenJti String? 
-  planId       Int
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  features Feature[]
+  id              Int       @id @default(autoincrement())
+  email           String    @unique
+  password        String
+  refreshToken    String?
+  refreshTokenJti String?
+  planId          Int
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  features        Feature[]
 
-
-  plan         Plan    @relation(fields: [planId], references: [id])
+  plan          Plan           @relation(fields: [planId], references: [id])
+  refreshTokens RefreshToken[]
 }
 
+model RefreshToken {
+  id            String    @id @default(uuid())
+  userId        Int
+  hashedToken   String
+  jti           String    @unique
+  familyId      String
+  parentJti     String?
+  replacedByJti String?
+  revokedAt     DateTime?
+  expiresAt     DateTime
+  createdAt     DateTime  @default(now())
 
-
+  user User @relation(fields: [userId], references: [id])
+}

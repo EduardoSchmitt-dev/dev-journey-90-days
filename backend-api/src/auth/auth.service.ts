@@ -56,7 +56,7 @@ export class AuthService {
   const payload = {
     sub: user.id,
     email: user.email,
-    jti: refreshJti,
+    jti: refreshJti, //
   };
 
   const access_token = this.jwtService.sign(payload, {
@@ -69,13 +69,19 @@ export class AuthService {
 
   const hashedRefreshToken = await this.hashPassword(refresh_token);
 
-  await this.prisma.user.update({
-    where: { id: user.id },
-    data: {
-      refreshToken: hashedRefreshToken,
-      refreshTokenJti: refreshJti,
-    },
-  });
+const familyId = randomUUID();
+
+await this.prisma.refreshToken.create({
+  data: {
+    userId: user.id,
+    hashedToken: hashedRefreshToken,
+    jti: refreshJti,
+    familyId,
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+  },
+});
+
+
 
   return {
     access_token,
@@ -110,43 +116,54 @@ export class AuthService {
   };
 }
 
-  async refreshToken(refreshToken: string) {
+ async refreshToken(refreshToken: string) {
   try {
-    // 🔐 1️⃣ Verifica assinatura
     const decoded = this.jwtService.verify(refreshToken);
-
     const { sub: userId, jti } = decoded;
 
-    // 🔎 2️⃣ Busca usuário
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+    const storedToken = await this.prisma.refreshToken.findUnique({
+      where: { jti },
     });
 
-    if (!user || !user.refreshToken || !user.refreshTokenJti) {
+
+    if (!storedToken) {
       throw new UnauthorizedException('Access denied');
     }
 
-    // 🔥 3️⃣ VALIDA JTI (ANTI-REPLAY REAL)
-    if (user.refreshTokenJti !== jti) {
-      throw new UnauthorizedException('Refresh token revoked');
+    // valida expiração no banco
+    if (storedToken.expiresAt < new Date()) {
+      throw new UnauthorizedException('Token expired ');
+    }
+    
+    // 🔥 REUSE DETECTION
+    if (storedToken.revokedAt || storedToken.replacedByJti) {
+
+      this.logger.warn(`Token reuse detected for user ${userId}`);
+
+      await this.prisma.refreshToken.updateMany({
+        where: { familyId: storedToken.familyId },
+        data: { revokedAt: new Date() },
+      });
+
+      throw new UnauthorizedException('Token reuse detected');
     }
 
-    // 🔒 4️⃣ VALIDA HASH
+    // 🔐 VALIDAR HASH
     const isValid = await this.comparePassword(
       refreshToken,
-      user.refreshToken,
+      storedToken.hashedToken,
     );
 
     if (!isValid) {
       throw new UnauthorizedException('Access denied');
     }
 
-    // 🔁 5️⃣ ROTACIONA TOKEN
+    // 🔄 ROTACIONAR
     const newRefreshJti = randomUUID();
 
     const newPayload = {
-      sub: user.id,
-      email: user.email,
+      sub: userId,
+      email: decoded.email,
       jti: newRefreshJti,
     };
 
@@ -158,13 +175,29 @@ export class AuthService {
       expiresIn: '7d',
     });
 
-    const hashedRefreshToken = await this.hashPassword(newRefreshToken);
+    const hashedNewRefreshToken =
+      await this.hashPassword(newRefreshToken);
 
-    await this.prisma.user.update({
-      where: { id: user.id },
+    // marca o antigo como usado
+    await this.prisma.refreshToken.update({
+      where: { jti: storedToken.jti },
       data: {
-        refreshToken: hashedRefreshToken,
-        refreshTokenJti: newRefreshJti,
+        revokedAt: new Date(),
+        replacedByJti: newRefreshJti,
+      },
+    });
+
+    // cria novo token filho
+    await this.prisma.refreshToken.create({
+      data: {
+        userId,
+        hashedToken: hashedNewRefreshToken,
+        jti: newRefreshJti,
+        familyId: storedToken.familyId,
+        parentJti: storedToken.jti,
+        expiresAt: new Date(
+          Date.now() + 7 * 24 * 60 * 60 * 1000,
+        ),
       },
     });
 
@@ -172,16 +205,22 @@ export class AuthService {
       access_token: newAccessToken,
       refresh_token: newRefreshToken,
     };
-  } catch (error) {
+  } catch {
     throw new UnauthorizedException('Access denied');
   }
 }
 
 
+
   async logout(userId: number) {
-  await this.prisma.user.update({
-    where: { id: userId },
-    data: { refreshToken: null },
+  await this.prisma.refreshToken.updateMany({
+    where: { 
+      userId, 
+      revokedAt: null,
+    },
+    data: { 
+      revokedAt: new Date(),
+    },
   });
 
   return { message: 'Logged out successfully' };
