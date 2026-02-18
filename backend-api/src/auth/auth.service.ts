@@ -87,7 +87,6 @@ export class AuthService {
 }
 
 
-
   async register(data: RegisterDto) {
   const hashedPassword = await this.hashPassword(data.password);
 
@@ -120,6 +119,10 @@ export class AuthService {
   });
 
   if (!user || !user.refreshToken) {
+    this.logger.warn(
+      { userId },
+      'Refresh failed - no stored refresh token',
+    );
     throw new UnauthorizedException('Access denied');
   }
 
@@ -129,6 +132,10 @@ export class AuthService {
   );
 
   if (!isRefreshTokenValid) {
+    this.logger.warn(
+      { userId },
+      'Refresh failed - invalid refresh token',
+    );
     throw new UnauthorizedException('Access denied');
   }
 
@@ -138,10 +145,28 @@ export class AuthService {
     expiresIn: '15m',
   });
 
+  const newRefreshToken = this.jwtService.sign(payload, {
+    expiresIn: '7d',
+  });
+
+  const hashedRefreshToken = await this.hashPassword(newRefreshToken);
+
+  await this.prisma.user.update({
+    where: { id: user.id },
+    data: { refreshToken: hashedRefreshToken },
+  });
+
+  this.logger.info(
+    { userId: user.id },
+    'Refresh token rotated successfully',
+  );
+
   return {
     access_token: newAccessToken,
+    refresh_token: newRefreshToken,
   };
- }
+}
+
   async logout(userId: number) {
   await this.prisma.user.update({
     where: { id: userId },

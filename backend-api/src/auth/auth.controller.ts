@@ -8,6 +8,10 @@ import { AuthUser } from './interfaces/auth-user.interface';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { version } from 'os';
 import { Throttle } from '@nestjs/throttler';
+import { refreshTokenDto } from './dto/refresh-token.dto';
+import { decode } from 'punycode';
+import { JwtService } from '@nestjs/jwt';
+
 
 @Controller({ 
   path: 'auth', 
@@ -15,7 +19,9 @@ import { Throttle } from '@nestjs/throttler';
 })
   @ApiTags('Auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService,
+              private readonly jwtService: JwtService,
+             ) {}
 
    @Post('register')
    async register(@Body() data: RegisterDto) {
@@ -29,9 +35,17 @@ export class AuthController {
   }
 
   @Post('refresh')
-  async refresh(@Body() body: { userId: number; refreshToken: string }) {
-    return this.authService.refreshToken(body.userId, body.refreshToken);
+  refresh( 
+    @Body() body : refreshTokenDto,
+  ) {
+    const { refresh_token } = body;
+
+    // aqui voce precisa extrair o user id do token
+    const decoded = this.jwtService.decode(refresh_token) as any; 
+
+    return this.authService.refreshToken(decoded.sub, refresh_token);
   }
+
   @Post('logout')
   @UseGuards(JwtAuthGuard)
   async logout(@CurrentUser() user: AuthUser) {
