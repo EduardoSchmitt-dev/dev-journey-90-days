@@ -32,6 +32,7 @@ model User {
   email        String   @unique
   password     String
   refreshToken String?
+  refreshTokenJti String? 
   planId       Int
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

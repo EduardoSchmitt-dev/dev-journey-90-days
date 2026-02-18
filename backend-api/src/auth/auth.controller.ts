@@ -35,16 +35,11 @@ export class AuthController {
   }
 
   @Post('refresh')
-  refresh( 
-    @Body() body : refreshTokenDto,
-  ) {
-    const { refresh_token } = body;
+refresh(@Body() body: refreshTokenDto) {
+  const { refresh_token } = body;
+  return this.authService.refreshToken(refresh_token);
+}
 
-    // aqui voce precisa extrair o user id do token
-    const decoded = this.jwtService.decode(refresh_token) as any; 
-
-    return this.authService.refreshToken(decoded.sub, refresh_token);
-  }
 
   @Post('logout')
   @UseGuards(JwtAuthGuard)

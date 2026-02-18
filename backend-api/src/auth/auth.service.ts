@@ -6,6 +6,8 @@ import { JwtService } from '@nestjs/jwt';
 import { UnauthorizedException } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
 import { PinoLogger } from 'nestjs-pino';
+import { randomUUID } from 'crypto';
+
 
 @Injectable()
 export class AuthService {
@@ -30,35 +32,32 @@ export class AuthService {
     return bcrypt.compare(password, hashedPassword);
   }
  
-  async login(data: LoginDto) {
-  this.logger.info({ email: data.email }, 'Login attempt');
-
+  async login(dto: LoginDto) {
   const user = await this.prisma.user.findUnique({
-    where: { email: data.email },
+    where: { email: dto.email },
   });
 
   if (!user) {
-    this.logger.warn(
-      { email: data.email },
-      'Login failed - user not found',
-    );
     throw new UnauthorizedException('Invalid credentials');
   }
 
-  const isPasswordValid = await this.comparePassword(
-    data.password,
+  const passwordValid = await this.comparePassword(
+    dto.password,
     user.password,
   );
 
-  if (!isPasswordValid) {
-    this.logger.warn(
-      { userId: user.id },
-      'Login failed - invalid password',
-    );
+  if (!passwordValid) {
     throw new UnauthorizedException('Invalid credentials');
   }
 
-  const payload = { sub: user.id, email: user.email };
+  // 🔥 GERAR JTI NOVO
+  const refreshJti = randomUUID();
+
+  const payload = {
+    sub: user.id,
+    email: user.email,
+    jti: refreshJti,
+  };
 
   const access_token = this.jwtService.sign(payload, {
     expiresIn: '15m',
@@ -72,18 +71,16 @@ export class AuthService {
 
   await this.prisma.user.update({
     where: { id: user.id },
-    data: { refreshToken: hashedRefreshToken },
+    data: {
+      refreshToken: hashedRefreshToken,
+      refreshTokenJti: refreshJti,
+    },
   });
-
-  this.logger.info(
-    { userId: user.id },
-    'Login successful',
-  );
 
   return {
     access_token,
     refresh_token,
-  };
+ };
 }
 
 
@@ -113,59 +110,73 @@ export class AuthService {
   };
 }
 
-  async refreshToken(userId: number, refreshToken: string) {
-  const user = await this.prisma.user.findUnique({
-    where: { id: userId },
-  });
+  async refreshToken(refreshToken: string) {
+  try {
+    // 🔐 1️⃣ Verifica assinatura
+    const decoded = this.jwtService.verify(refreshToken);
 
-  if (!user || !user.refreshToken) {
-    this.logger.warn(
-      { userId },
-      'Refresh failed - no stored refresh token',
+    const { sub: userId, jti } = decoded;
+
+    // 🔎 2️⃣ Busca usuário
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user || !user.refreshToken || !user.refreshTokenJti) {
+      throw new UnauthorizedException('Access denied');
+    }
+
+    // 🔥 3️⃣ VALIDA JTI (ANTI-REPLAY REAL)
+    if (user.refreshTokenJti !== jti) {
+      throw new UnauthorizedException('Refresh token revoked');
+    }
+
+    // 🔒 4️⃣ VALIDA HASH
+    const isValid = await this.comparePassword(
+      refreshToken,
+      user.refreshToken,
     );
+
+    if (!isValid) {
+      throw new UnauthorizedException('Access denied');
+    }
+
+    // 🔁 5️⃣ ROTACIONA TOKEN
+    const newRefreshJti = randomUUID();
+
+    const newPayload = {
+      sub: user.id,
+      email: user.email,
+      jti: newRefreshJti,
+    };
+
+    const newAccessToken = this.jwtService.sign(newPayload, {
+      expiresIn: '15m',
+    });
+
+    const newRefreshToken = this.jwtService.sign(newPayload, {
+      expiresIn: '7d',
+    });
+
+    const hashedRefreshToken = await this.hashPassword(newRefreshToken);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        refreshToken: hashedRefreshToken,
+        refreshTokenJti: newRefreshJti,
+      },
+    });
+
+    return {
+      access_token: newAccessToken,
+      refresh_token: newRefreshToken,
+    };
+  } catch (error) {
     throw new UnauthorizedException('Access denied');
   }
-
-  const isRefreshTokenValid = await this.comparePassword(
-    refreshToken,
-    user.refreshToken,
-  );
-
-  if (!isRefreshTokenValid) {
-    this.logger.warn(
-      { userId },
-      'Refresh failed - invalid refresh token',
-    );
-    throw new UnauthorizedException('Access denied');
-  }
-
-  const payload = { sub: user.id, email: user.email };
-
-  const newAccessToken = this.jwtService.sign(payload, {
-    expiresIn: '15m',
-  });
-
-  const newRefreshToken = this.jwtService.sign(payload, {
-    expiresIn: '7d',
-  });
-
-  const hashedRefreshToken = await this.hashPassword(newRefreshToken);
-
-  await this.prisma.user.update({
-    where: { id: user.id },
-    data: { refreshToken: hashedRefreshToken },
-  });
-
-  this.logger.info(
-    { userId: user.id },
-    'Refresh token rotated successfully',
-  );
-
-  return {
-    access_token: newAccessToken,
-    refresh_token: newRefreshToken,
-  };
 }
+
 
   async logout(userId: number) {
   await this.prisma.user.update({
