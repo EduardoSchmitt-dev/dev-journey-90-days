@@ -14,6 +14,8 @@ import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express'; 
 import { Delete, Param } from '@nestjs/common';
 
+
+
 @Controller({ 
   path: 'auth', 
   version: '1',
@@ -58,10 +60,14 @@ export class AuthController {
 
 
   @Post('refresh')
-refresh(@Body() body: refreshTokenDto) {
+refresh(
+  @Req() req: Request,
+  @Body() body: refreshTokenDto,
+) {
   const { refresh_token } = body;
-  return this.authService.refreshToken(refresh_token);
+  return this.authService.refreshToken(refresh_token, req);
 }
+
 
 
   @Post('logout')

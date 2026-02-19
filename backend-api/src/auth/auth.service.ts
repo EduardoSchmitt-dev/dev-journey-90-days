@@ -8,7 +8,7 @@ import { LoginDto } from './dto/login.dto';
 import { PinoLogger } from 'nestjs-pino';
 import { randomUUID } from 'crypto';
 import { Request } from 'express';
-
+import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +20,13 @@ export class AuthService {
     this.logger.setContext(AuthService.name);
   }
 
+  private generateDeviceHash
+  (ip: string | undefined,
+   userAgent: string | undefined
+  ) {
+    const raw = `${ip || 'unknown'} |${userAgent || 'unknown'}|${process.env.JWT_SECRET}`;
+    return crypto.createHash('sha256').update(raw).digest('hex');
+    }
 
   async hashPassword(password: string): Promise<string> {
     const saltRounds = 10;
@@ -38,6 +45,7 @@ export class AuthService {
     where: { email: dto.email },
   });
 
+
   if (!user) {
     throw new UnauthorizedException('Invalid credentials');
   }
@@ -48,8 +56,12 @@ export class AuthService {
   );
 
   if (!passwordValid) {
-    throw new UnauthorizedException('Invalid credentials');
+  this.logger.warn(`Invalid login attempt for email ${dto.email} from ${req.ip}`);
+  throw new UnauthorizedException('Invalid credentials');
   }
+
+  this.logger.info(`User ${user.id} logged in from ${req.ip}`);
+
 
   // 🔥 GERAR JTI NOVO
   const refreshJti = randomUUID();
@@ -72,19 +84,23 @@ export class AuthService {
 
 const familyId = randomUUID();
 
+const deviceHash = this.generateDeviceHash(
+  req.ip,
+  req.headers['user-agent'],
+);
+
 await this.prisma.refreshToken.create({
   data: {
     userId: user.id,
     hashedToken: hashedRefreshToken,
     jti: refreshJti,
     familyId,
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    ipAddres: req.ip,
-    userAgent: req.headers['user-agent'],
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 
+    ipAddress: req.ip,
+    userAgent: req.headers['user-agent'], 
+    deviceHash,
   },
 });
-
-
 
   return {
     access_token,
@@ -119,7 +135,7 @@ await this.prisma.refreshToken.create({
   };
 }
 
- async refreshToken(refreshToken: string) {
+ async refreshToken(refreshToken: string, req: Request) {
   try {
     const decoded = this.jwtService.verify(refreshToken);
     const { sub: userId, jti } = decoded;
@@ -127,6 +143,8 @@ await this.prisma.refreshToken.create({
     const storedToken = await this.prisma.refreshToken.findUnique({
       where: { jti },
     });
+
+    
 
 
     if (!storedToken) {
@@ -142,6 +160,8 @@ await this.prisma.refreshToken.create({
     if (storedToken.revokedAt || storedToken.replacedByJti) {
 
       this.logger.warn(`Token reuse detected for user ${userId}`);
+      this.logger.warn(`User ${userId} revoked session ${jti}`);
+
 
       await this.prisma.refreshToken.updateMany({
         where: { familyId: storedToken.familyId },
@@ -204,6 +224,16 @@ await this.prisma.refreshToken.create({
       },
     });
 
+    const currentDeviceHash = this.generateDeviceHash(
+     req.ip,
+     req.headers['user-agent'],
+ );
+
+  if (storedToken.deviceHash && storedToken.deviceHash !== currentDeviceHash) {
+  this.logger.warn(`Device mismatch for user ${userId}`);
+ 
+
+    }
     return {
       access_token: newAccessToken,
       refresh_token: newRefreshToken,
@@ -212,7 +242,6 @@ await this.prisma.refreshToken.create({
     throw new UnauthorizedException('Access denied');
   }
 }
-
 
 async getActiveSessions(userId: number) {
   return this.prisma.refreshToken.findMany({
@@ -225,7 +254,7 @@ async getActiveSessions(userId: number) {
     },
     select: { 
       jti: true,
-      ipAddres: true,
+      ipAddress: true,
       userAgent: true,
       createdAt: true,
     },
@@ -264,6 +293,8 @@ async getActiveSessions(userId: number) {
       revokedAt: new Date(),
     },
   });
+
+  this.logger.warn(`User ${userId} performed global logout`);
 
   return { message: 'Logged out successfully' };
  }
