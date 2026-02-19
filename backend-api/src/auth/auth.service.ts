@@ -7,6 +7,7 @@ import { UnauthorizedException } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
 import { PinoLogger } from 'nestjs-pino';
 import { randomUUID } from 'crypto';
+import { Request } from 'express';
 
 
 @Injectable()
@@ -32,7 +33,7 @@ export class AuthService {
     return bcrypt.compare(password, hashedPassword);
   }
  
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto, req: Request) {
   const user = await this.prisma.user.findUnique({
     where: { email: dto.email },
   });
@@ -78,6 +79,8 @@ await this.prisma.refreshToken.create({
     jti: refreshJti,
     familyId,
     expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    ipAddres: req.ip,
+    userAgent: req.headers['user-agent'],
   },
 });
 
@@ -210,6 +213,45 @@ await this.prisma.refreshToken.create({
   }
 }
 
+
+async getActiveSessions(userId: number) {
+  return this.prisma.refreshToken.findMany({
+    where: {
+      userId,
+      revokedAt: null,  
+      expiresAt: {
+        gt: new Date(),
+      },
+    },
+    select: { 
+      jti: true,
+      ipAddres: true,
+      userAgent: true,
+      createdAt: true,
+    },
+  });
+}
+
+  async revokeSession(userId: number, jti: string) {
+    const token = await this.prisma.refreshToken.findUnique({
+      where: { jti },
+    });
+
+    if (!token) {
+      throw new UnauthorizedException('Session not found');
+    }
+
+    // garante que o usuÁrio só pode revogar suas próprias sessões 
+    if (token.userId !== userId){
+      throw new UnauthorizedException('Acess denied');
+    }
+    await this.prisma.refreshToken.update({
+      where: { jti },
+      data: {revokedAt: new Date() },
+    });
+    
+    return { message: 'Session revoked successfully'};
+  }
 
 
   async logout(userId: number) {

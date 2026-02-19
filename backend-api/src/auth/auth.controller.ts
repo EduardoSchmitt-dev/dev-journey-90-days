@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto'
@@ -11,7 +11,8 @@ import { Throttle } from '@nestjs/throttler';
 import { refreshTokenDto } from './dto/refresh-token.dto';
 import { decode } from 'punycode';
 import { JwtService } from '@nestjs/jwt';
-
+import { Request } from 'express'; 
+import { Delete, Param } from '@nestjs/common';
 
 @Controller({ 
   path: 'auth', 
@@ -23,16 +24,38 @@ export class AuthController {
               private readonly jwtService: JwtService,
              ) {}
 
+   @Get('sessions')
+   @UseGuards(JwtAuthGuard)
+   @ApiBearerAuth()
+   getSession(@CurrentUser() user: AuthUser) {
+    return this.authService.getActiveSessions(user.userId);
+   }   
+   
+   @Delete('sessios/:jti')
+   @UseGuards(JwtAuthGuard)
+   @ApiBearerAuth()
+   revokeSession(
+     @Param('jti') jti: string,
+     @CurrentUser() user: AuthUser,
+   ) {
+    return this.authService.revokeSession(user.userId, jti);
+   }
+  
+
    @Post('register')
-   async register(@Body() data: RegisterDto) {
+     async register(@Body() data: RegisterDto) {
      return this.authService.register(data);
    }
 
    @Post('login')
    @Throttle({ default: { limit: 5, ttl: 60000 } })
-   login(@Body() dto: LoginDto) {
-     return this.authService.login(dto);
-  }
+   login(
+    @Req() req: Request, 
+    @Body() dto: LoginDto
+  ) {
+   return this.authService.login(dto, req);
+   }
+
 
   @Post('refresh')
 refresh(@Body() body: refreshTokenDto) {

@@ -52,6 +52,8 @@ model RefreshToken {
   replacedByJti String?
   revokedAt     DateTime?
   expiresAt     DateTime
+  ipAddres      String?
+  userAgent     String?
   createdAt     DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id])
