@@ -40,32 +40,62 @@ export class AuthService {
     return bcrypt.compare(password, hashedPassword);
   }
  
-  async login(dto: LoginDto, req: Request) {
+  async login(dto: LoginDto, req: Request) { //busca o usuário
   const user = await this.prisma.user.findUnique({
     where: { email: dto.email },
   });
 
 
-  if (!user) {
-    throw new UnauthorizedException('Invalid credentials');
-  }
+ if (!user) {
+  throw new UnauthorizedException('Invalid credentials');
+ }
 
-  const passwordValid = await this.comparePassword(
-    dto.password,
-    user.password,
-  );
-
-  if (!passwordValid) {
-  this.logger.warn(`Invalid login attempt for email ${dto.email} from ${req.ip}`);
+  // 🔒 Verifica se conta está bloqueada
+  if (user.lockUntil && user.lockUntil > new Date()) {
+  this.logger.warn(`Blocked login attempt for locked user ${user.id}`);
   throw new UnauthorizedException('Invalid credentials');
   }
 
-  this.logger.info(`User ${user.id} logged in from ${req.ip}`);
+  const passwordValid = await this.comparePassword(
+  dto.password,
+  user.password,
+);
 
+if (!passwordValid) {
+  const attempts = user.failedLoginAttempts + 1;
 
-  // 🔥 GERAR JTI NOVO
+  let lockUntil: Date | null = null;
+
+  if (attempts >= 5) {
+    lockUntil = new Date(Date.now() + 15 * 60 * 1000);
+  }
+
+  await this.prisma.user.update({
+    where: { id: user.id },
+    data: {
+      failedLoginAttempts: attempts,
+      lockUntil,
+    },
+  });
+
+  this.logger.warn(`Invalid login attempt ${attempts} for user ${user.id}`);
+
+  throw new UnauthorizedException('Invalid credentials');
+}
+
+// ✅ RESET SOMENTE AQUI (senha válida)
+await this.prisma.user.update({
+  where: { id: user.id },
+  data: {
+    failedLoginAttempts: 0,
+    lockUntil: null,
+  },
+});
+
+  // 🔥 GERAR JTI NOVO/gerar tokens
   const refreshJti = randomUUID();
 
+  
   const payload = {
     sub: user.id,
     email: user.email,
@@ -88,6 +118,8 @@ const deviceHash = this.generateDeviceHash(
   req.ip,
   req.headers['user-agent'],
 );
+
+
 
 await this.prisma.refreshToken.create({
   data: {

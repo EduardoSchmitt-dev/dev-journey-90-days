@@ -34,8 +34,11 @@ model User {
   refreshToken    String?
   refreshTokenJti String?
   planId          Int
+  failedLoginAttempts Int   @default(0)
+  lockUntil       DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+  
   features        Feature[]
 
   plan          Plan           @relation(fields: [planId], references: [id])
