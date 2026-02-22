@@ -10,7 +10,7 @@ import { RateLimitModule } from './rate-limit/rate-limit.module';
 import { ThrottlerExceptionFilter } from './common/filters/throttler-exception.filter';
 import { ProgressiveLockService } from './common/security/progressive-lock.service';
 import { AppLogger } from './common/logger/app-logger.service';
-import { RequestLoggingInterceptor } from './common/intercptors/request-logging.interceptor';
+import { RequestLoggingInterceptor } from './common/interceptors/request-logging.interceptor';
 
 @Module({
   imports: [

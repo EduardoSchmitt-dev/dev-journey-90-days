@@ -1,23 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { UsersRepository } from './repositories/users.repository';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly usersRepository: UsersRepository) {}
 
   async changePlan(userId: number, planName: string) {
-    const plan = await this.prisma.plan.findUnique({
-      where: { name: planName },
-    });
+    const plan = await this.usersRepository.findPlanByName(planName);
 
     if (!plan) {
       throw new NotFoundException('Plan not found');
     }
 
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { planId: plan.id },
-    });
+    await this.usersRepository.updateUserPlan(userId, plan.id);
 
     return {
       message: `Plan upgraded to ${plan.name}`,

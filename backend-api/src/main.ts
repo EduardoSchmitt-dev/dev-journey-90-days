@@ -10,7 +10,7 @@ import helmet from 'helmet';
 import { VersioningType } from '@nestjs/common';
 import { Logger } from 'nestjs-pino';
 import { ThrottlerExceptionFilter } from './common/filters/throttler-exception.filter';
-import { RequestLoggingInterceptor } from './common/intercptors/request-logging.interceptor';
+import { RequestLoggingInterceptor } from './common/interceptors/request-logging.interceptor';
 
 
 async function bootstrap() {

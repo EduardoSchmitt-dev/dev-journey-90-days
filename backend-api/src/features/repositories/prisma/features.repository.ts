@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../../prisma/prisma.service';
+import { PrismaService } from '../../../infrastructure/prisma/prisma.service';
 import { IFeaturesRepository } from '../features.repository.interface';
 import { FeatureEntity } from '../../features.repository';
 import { CreateFeatureDto } from '../../dto/create-feature.dto';
