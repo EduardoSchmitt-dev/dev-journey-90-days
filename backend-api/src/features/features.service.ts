@@ -5,13 +5,12 @@ import { FindFeaturesDto } from './dto/find-features.dto';
 import { IFeaturesRepository } from './repositories/features.repository.interface';
 import { FEATURES_REPOSITORY } from './repositories/features.repository.token';
 import { FeatureEntity } from './features.repository';
-
-
+import { Feature } from '@prisma/client';
 
 @Injectable()
 export class FeaturesService {
   constructor(
-  @Inject(FEATURES_REPOSITORY)
+  @Inject('IFeaturesRepository')
   private readonly featuresRepository: IFeaturesRepository,
 ) {}
   
@@ -31,7 +30,7 @@ export class FeaturesService {
   async findAll(query: FindFeaturesDto) {
   const { page = 1, limit = 10, name } = query;
 
-  const features = await this.featuresRepository.findAll();
+const features: Feature[] = await this.featuresRepository.findAll();
 
   let filtered = features;
 
@@ -57,9 +56,6 @@ export class FeaturesService {
     },
   };
 }
-
-   
-
 
   async remove(id: number): Promise<void> {
   const feature = await this.featuresRepository.findById(id);
