@@ -6,9 +6,14 @@ import { FeaturesModule } from './features/features.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { LoggerModule } from 'nestjs-pino';
+import { RateLimitModule } from './rate-limit/rate-limit.module';
+import { ThrottlerExceptionFilter } from './common/filters/throttler-exception.filter';
+import { ProgressiveLockService } from './common/security/progressive-lock.service';
+
 
 @Module({
   imports: [
+    RateLimitModule,
     LoggerModule.forRoot({
       pinoHttp: {
         level: 'info',
@@ -35,7 +40,9 @@ import { LoggerModule } from 'nestjs-pino';
     AuthModule,
     UsersModule,
   ],
-  providers: [
+  providers: [ 
+    ProgressiveLockService,
+    ThrottlerExceptionFilter,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,

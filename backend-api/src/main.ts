@@ -9,6 +9,8 @@ import { Reflector } from '@nestjs/core';
 import helmet from 'helmet';
 import { VersioningType } from '@nestjs/common';
 import { Logger } from 'nestjs-pino';
+import { ThrottlerExceptionFilter } from './common/filters/throttler-exception.filter';
+
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -53,6 +55,7 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalFilters(new GlobalExceptionFilter());
   app.useLogger(app.get(Logger));
+  app.useGlobalFilters(app.get(ThrottlerExceptionFilter));
 
   const config = new DocumentBuilder()
     .setTitle('Saas Feature Control API')
