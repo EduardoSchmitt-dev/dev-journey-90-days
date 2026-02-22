@@ -315,6 +315,10 @@ async getActiveSessions(userId: number) {
   }
 
 
+
+  //CRIAR UM MÉTODO TEMPORÁRIO DE RESET ????? NO AUTH SERVICE 
+
+
   async logout(userId: number) {
   await this.prisma.refreshToken.updateMany({
     where: { 

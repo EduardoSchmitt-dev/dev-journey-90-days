@@ -6,12 +6,14 @@ import {
 } from '@nestjs/common';
 import { ThrottlerException } from '@nestjs/throttler';
 import { ProgressiveLockService } from '../security/progressive-lock.service';
+import { AppLogger } from '../logger/app-logger.service';
 
 @Catch(ThrottlerException)
 export class ThrottlerExceptionFilter implements ExceptionFilter {
 
   constructor(
     private readonly progressiveLock: ProgressiveLockService,
+    private readonly logger: AppLogger,
   ) {}
 
   catch(exception: ThrottlerException, host: ArgumentsHost) {
@@ -24,20 +26,27 @@ export class ThrottlerExceptionFilter implements ExceptionFilter {
       request.ip ||
       request.socket?.remoteAddress;
 
-    console.warn('🚨 RATE LIMIT ABUSE:', {
-      ip,
-      path: request.url,
-      method: request.method,
-      timestamp: new Date().toISOString(),
-    });
+    this.logger.warn(
+  'Rate limit abuse detected',
+  'ThrottlerExceptionFilter',
+  {
+    ip,
+    path: request.url,
+    method: request.method,
+  },
+);
 
     const key = ip;
     const duration = this.progressiveLock.registerFailure(key);
 
-    console.warn('🚨 Progressive Lock:', {
-      ip,
-      lockedFor: duration / 1000 + ' seconds',
-    });
+    this.logger.warn(
+  '🚨 Progressive lock applied',
+  '🚨 ThrottlerExceptionFilter',
+  {
+    ip,
+    lockedForSeconds: duration / 1000,
+  },
+);
 
     response.status(HttpStatus.TOO_MANY_REQUESTS).json({
       statusCode: 429,

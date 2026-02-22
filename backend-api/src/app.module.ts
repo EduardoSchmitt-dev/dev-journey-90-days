@@ -9,7 +9,8 @@ import { LoggerModule } from 'nestjs-pino';
 import { RateLimitModule } from './rate-limit/rate-limit.module';
 import { ThrottlerExceptionFilter } from './common/filters/throttler-exception.filter';
 import { ProgressiveLockService } from './common/security/progressive-lock.service';
-
+import { AppLogger } from './common/logger/app-logger.service';
+import { RequestLoggingInterceptor } from './common/intercptors/request-logging.interceptor';
 
 @Module({
   imports: [
@@ -41,8 +42,10 @@ import { ProgressiveLockService } from './common/security/progressive-lock.servi
     UsersModule,
   ],
   providers: [ 
+    AppLogger,
     ProgressiveLockService,
     ThrottlerExceptionFilter,
+    RequestLoggingInterceptor,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
