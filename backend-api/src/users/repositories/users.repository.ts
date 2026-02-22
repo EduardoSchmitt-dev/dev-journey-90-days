@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
+import { IUsersRepository } from './users.repository.interface';
 
 @Injectable()
-export class UsersRepository {
+export class UsersRepository implements IUsersRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   findPlanByName(name: string) {

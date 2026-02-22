@@ -1,9 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { UsersRepository } from './repositories/users.repository';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { IUsersRepository } from './repositories/users.repository.interface';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersRepository: UsersRepository) {}
+  constructor(
+    @Inject('IUsersRepository')
+    private readonly usersRepository: IUsersRepository,
+  ) {}
 
   async changePlan(userId: number, planName: string) {
     const plan = await this.usersRepository.findPlanByName(planName);
