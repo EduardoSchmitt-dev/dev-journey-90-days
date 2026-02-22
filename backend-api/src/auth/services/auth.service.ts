@@ -1,5 +1,5 @@
 import * as bcrypt from 'bcrypt';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { RegisterDto } from '../dto/register.dto';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from '../dto/login.dto';
@@ -8,13 +8,16 @@ import { randomUUID } from 'crypto';
 import { Request } from 'express';
 import * as crypto from 'crypto';
 import { AuthRepository } from '../repositories/auth.repository';
+import { IAuthRepository } from '../repositories/auth.repository.interface';
+
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly logger: PinoLogger,
-    private readonly authRepository: AuthRepository,
+    @Inject('IAuthRepository')
+    private readonly authRepository: IAuthRepository,
   ) {
     this.logger.setContext(AuthService.name);
   }
