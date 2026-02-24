@@ -33,7 +33,7 @@ export class AuthController {
     return this.authService.getActiveSessions(user.userId);
    }   
    
-   @Delete('sessios/:jti')
+   @Delete('sessions/:jti')
    @UseGuards(JwtAuthGuard)
    @ApiBearerAuth()
    revokeSession(
@@ -50,7 +50,7 @@ export class AuthController {
    }
 
    @Post('login')
-   @Throttle({ global: { limit: 5, ttl: 60000 } })
+   @Throttle({ default: { limit: 5, ttl: 60000 } })
    login(
     @Req() req: Request, 
     @Body() dto: LoginDto
@@ -60,7 +60,7 @@ export class AuthController {
 
 
   @Post('refresh')
-  @Throttle({ global: { limit: 10, ttl: 60_000 } })
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
 refresh(
   @Req() req: Request,
   @Body() body: refreshTokenDto,

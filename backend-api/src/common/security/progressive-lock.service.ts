@@ -1,45 +1,57 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, } from '@nestjs/common';
 
-interface LockData {
+interface AttemptData {
   attempts: number;
-  lockedUntil: number | null;
+  lastAttempt: number;
+  lockUntil?: number;
 }
 
 @Injectable()
 export class ProgressiveLockService {
-  private locks = new Map<string, LockData>();
+  private readonly store = new Map<string, AttemptData>();
 
-  private lockDurations = [60_000, 5 * 60_000, 15 * 60_000, 60 * 60_000];
+  private readonly maxAttempts = 5;
+  private readonly baseDelay = 300; // ms
 
-  registerFailure(key: string) {
-    const now = Date.now();
-    const data = this.locks.get(key) || { attempts: 0, lockedUntil: null };
+  async checkLock(identifier: string) {
+    const data = this.store.get(identifier);
+    if (!data) return;
 
-    data.attempts += 1;
-
-    const duration =
-      this.lockDurations[Math.min(data.attempts - 1, this.lockDurations.length - 1)];
-
-    data.lockedUntil = now + duration;
-
-    this.locks.set(key, data);
-
-    return duration;
-  }
-
-  isLocked(key: string): boolean {
-    const data = this.locks.get(key);
-    if (!data?.lockedUntil) return false;
-
-    if (Date.now() > data.lockedUntil) {
-      this.locks.delete(key);
-      return false;
+    // Se estiver bloqueado
+    if (data.lockUntil && Date.now() < data.lockUntil) {
+      throw new HttpException('Account temporarily locked', HttpStatus.TOO_MANY_REQUESTS);
     }
 
-    return true;
+    // Delay progressivo
+    if (data.attempts > 0) {
+      const delay = this.baseDelay * Math.pow(2, data.attempts - 1);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
   }
 
-  clear(key: string) {
-    this.locks.delete(key);
+  async registerFailure(identifier: string) {
+    const now = Date.now();
+    const data = this.store.get(identifier);
+
+    if (!data) {
+      this.store.set(identifier, {
+        attempts: 1,
+        lastAttempt: now,
+      });
+      return;
+    }
+
+    data.attempts += 1;
+    data.lastAttempt = now;
+
+    if (data.attempts >= this.maxAttempts) {
+      data.lockUntil = now + 60_000; // 1 minuto bloqueado
+    }
+
+    this.store.set(identifier, data);
+  }
+
+  async reset(identifier: string) {
+    this.store.delete(identifier);
   }
 }

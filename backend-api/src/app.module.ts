@@ -1,55 +1,60 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-
+import { APP_FILTER } from '@nestjs/core';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { SecurityModule } from './common/security/security.module';
 import { FeaturesModule } from './features/features.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { LoggerModule } from 'nestjs-pino';
 import { RateLimitModule } from './rate-limit/rate-limit.module';
-import { ThrottlerExceptionFilter } from './common/filters/throttler-exception.filter';
-import { ProgressiveLockService } from './common/security/progressive-lock.service';
-import { AppLogger } from './common/logger/app-logger.service';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { RequestLoggingInterceptor } from './common/interceptors/request-logging.interceptor';
+import { ThrottlerExceptionFilter } from './common/filters/throttler-exception.filter';
+import { LoggerCoreModule } from './common/logger/logger-core.module';
 
 @Module({
   imports: [
     RateLimitModule,
+    AuthModule,
+    UsersModule,
+    FeaturesModule,
+    SecurityModule,
+    LoggerCoreModule,
+
+    // ✅ ThrottlerModule TEM que ficar aqui (imports)
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60,
+        limit: 20,
+      },
+    ]),
+
     LoggerModule.forRoot({
       pinoHttp: {
         level: 'info',
         genReqId: (req) => {
           return req.headers['x-request-id'] || require('crypto').randomUUID();
         },
-        transport: { 
+        transport: {
           target: 'pino-pretty',
           options: {
             singleLine: true,
           },
-         },
         },
-      }),
-
-      ThrottlerModule.forRoot({
-        throttlers: [
-          { ttl: 60,
-            limit: 20,
-          },
-        ],
-      }),
-    FeaturesModule,
-    AuthModule,
-    UsersModule,
+      },
+    }),
   ],
-  providers: [ 
-    AppLogger,
-    ProgressiveLockService,
-    ThrottlerExceptionFilter,
-    RequestLoggingInterceptor,
+  controllers: [],
+  providers: [
+    // ✅ Filter global do throttler
     {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      provide: APP_INTERCEPTOR,
+      useClass: RequestLoggingInterceptor,
     },
+    {
+    provide: APP_FILTER,
+    useClass: ThrottlerExceptionFilter,
+  },
   ],
 })
 export class AppModule {}

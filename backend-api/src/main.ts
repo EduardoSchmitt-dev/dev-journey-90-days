@@ -56,8 +56,6 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalFilters(new GlobalExceptionFilter());
   app.useLogger(app.get(Logger));
-  app.useGlobalFilters(app.get(ThrottlerExceptionFilter));
-  app.useGlobalInterceptors(app.get(RequestLoggingInterceptor));
 
   const config = new DocumentBuilder()
     .setTitle('Saas Feature Control API')

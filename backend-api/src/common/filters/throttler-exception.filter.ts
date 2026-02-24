@@ -3,6 +3,7 @@ import {
   Catch,
   ArgumentsHost,
   HttpStatus,
+  Injectable,
 } from '@nestjs/common';
 import { ThrottlerException } from '@nestjs/throttler';
 import { ProgressiveLockService } from '../security/progressive-lock.service';
@@ -16,7 +17,7 @@ export class ThrottlerExceptionFilter implements ExceptionFilter {
     private readonly logger: AppLogger,
   ) {}
 
-  catch(exception: ThrottlerException, host: ArgumentsHost) {
+  async catch(exception: ThrottlerException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
     const request = ctx.getRequest();
@@ -35,19 +36,15 @@ export class ThrottlerExceptionFilter implements ExceptionFilter {
     method: request.method,
   },
 );
-
     const key = ip;
-    const duration = this.progressiveLock.registerFailure(key);
-
+   
+    await this.progressiveLock.registerFailure(key);
     this.logger.warn(
-  '🚨 Progressive lock applied',
-  '🚨 ThrottlerExceptionFilter',
-  {
-    ip,
-    lockedForSeconds: duration / 1000,
-  },
+      '🚨 Progressive lock applied', 
+      '🚨 ThrottlerExceptionFilter',
+    { ip },
 );
-
+    
     response.status(HttpStatus.TOO_MANY_REQUESTS).json({
       statusCode: 429,
       message: 'Too many requests. Please slow down.',
