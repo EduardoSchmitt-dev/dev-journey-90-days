@@ -1,60 +1,38 @@
-import { Module } from '@nestjs/common';
-import { APP_FILTER } from '@nestjs/core';
-import { ThrottlerModule } from '@nestjs/throttler';
-import { SecurityModule } from './common/security/security.module';
-import { FeaturesModule } from './features/features.module';
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
+import { Module,RequestMethod, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { LoggerModule } from 'nestjs-pino';
-import { RateLimitModule } from './rate-limit/rate-limit.module';
-import { APP_INTERCEPTOR } from '@nestjs/core';
-import { RequestLoggingInterceptor } from './common/interceptors/request-logging.interceptor';
-import { ThrottlerExceptionFilter } from './common/filters/throttler-exception.filter';
-import { LoggerCoreModule } from './common/logger/logger-core.module';
+import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
+import { randomUUID } from 'crypto';
+import { HealthController } from './health/health.controller';
+import { PrismaModule } from './infrastructure/prisma/prisma.module';
+
 
 @Module({
-  imports: [
-    RateLimitModule,
-    AuthModule,
-    UsersModule,
-    FeaturesModule,
-    SecurityModule,
-    LoggerCoreModule,
-
-    // ✅ ThrottlerModule TEM que ficar aqui (imports)
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60,
-        limit: 20,
-      },
-    ]),
-
+  imports: [ 
+    PrismaModule,
     LoggerModule.forRoot({
       pinoHttp: {
-        level: 'info',
-        genReqId: (req) => {
-          return req.headers['x-request-id'] || require('crypto').randomUUID();
-        },
-        transport: {
-          target: 'pino-pretty',
-          options: {
-            singleLine: true,
-          },
-        },
-      },
-    }),
-  ],
-  controllers: [],
-  providers: [
-    // ✅ Filter global do throttler
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: RequestLoggingInterceptor,
-    },
-    {
-    provide: APP_FILTER,
-    useClass: ThrottlerExceptionFilter,
-  },
-  ],
+       level: 'info',
+       
+       genReqId: (req) =>
+        req.headers['x-request-id'] || randomUUID(),
+
+       transport: 
+          process.env.NODE_ENV !== 'production'
+            ? {
+                target: 'pino-pretty',
+                options: { singleLine: true},
+              }
+             : undefined,
+            },
+       }), 
+    ],
+    controllers: [HealthController],
 })
-export class AppModule {}
+
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CorrelationIdMiddleware)
+    .forRoutes({ path: '(.*)', method: RequestMethod.ALL });
+  }
+}
+        

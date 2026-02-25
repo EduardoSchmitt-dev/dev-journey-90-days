@@ -1,10 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { PinoLogger } from 'nestjs-pino';
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { Request } from 'express';
 
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
-import { refreshTokenDto } from '../dto/refresh-token.dto'; // se você usa esse dto
 import { IAuthRepository } from '../repositories/auth.repository.interface';
 
 import { LoginUseCase } from '../use-cases/login.use-case';
@@ -12,8 +11,9 @@ import { LoginUseCase } from '../use-cases/login.use-case';
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly loginUseCase: LoginUseCase,
+    @InjectPinoLogger(AuthService.name)
     private readonly logger: PinoLogger,
+    private readonly loginUseCase: LoginUseCase,
     @Inject('IAuthRepository')
     private readonly authRepository: IAuthRepository,
   ) {
@@ -21,7 +21,15 @@ export class AuthService {
   }
 
   // ✅ Controller chama login(dto, req)
-  async login(dto: LoginDto, req: Request) {
+  async login(dto: LoginDto, req: Request) 
+  { this.logger.info(
+  { requestId: req['requestId'],
+    email: dto.email,
+    ip: req.ip,
+    userAgent: String(req.headers['user-agent']),
+  },
+  'Login attempt',
+  );
     return this.loginUseCase.execute(dto, req);
   }
 
@@ -38,19 +46,38 @@ export class AuthService {
   }
 
   async getActiveSessions(userId: number) {
-    return this.authRepository.findActiveSessions(userId);
+  return this.authRepository.findActiveSessions(userId);
   }
 
-  async revokeSession(userId: number, jti: string) {
-    const token = await this.authRepository.findRefreshTokenByJti(jti);
-    if (!token || token.userId !== userId) {
+  async revokeSession(userId: number, jti: string)  { 
+    this.logger.warn(
+   {
+    userId,
+    jti,
+   },
+  'Session revoked',
+   );
+    const token = await this.authRepository.findRefreshTokenByJti(jti); 
+    if (!token || token.userId !== userId ) {
+      this.logger.warn(
+    {
+    attemptedUserId: userId,
+    tokenUserId: token?.userId,
+    jti,
+    },
+    'Unauthorized revoke attempt',
+    );
       throw new Error('Access denied');
-    }
+    } 
     return this.authRepository.revokeSession(jti);
   }
 
   async logout(userId: number) {
     await this.authRepository.logoutAll(userId);
+    this.logger.info(
+  { userId },
+  'User logout',
+  );
     return { message: 'Logged out successfully' };
   }
 }
