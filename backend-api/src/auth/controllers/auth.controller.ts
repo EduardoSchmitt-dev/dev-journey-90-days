@@ -13,8 +13,8 @@ import { decode } from 'punycode';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express'; 
 import { Delete, Param } from '@nestjs/common';
-
-
+import { RefreshToken } from '@prisma/client';
+import { RefreshTokenUseCase } from '../use-cases/refresh-token.use-case';
 
 @Controller({ 
   path: 'auth', 
@@ -24,6 +24,7 @@ import { Delete, Param } from '@nestjs/common';
 export class AuthController {
   constructor(private readonly authService: AuthService,
               private readonly jwtService: JwtService,
+              private readonly refreshTokenUseCase: RefreshTokenUseCase,
              ) {}
 
    @Get('sessions')
@@ -42,7 +43,6 @@ export class AuthController {
    ) {
     return this.authService.revokeSession(user.userId, jti);
    }
-  
 
    @Post('register')
      async register(@Body() data: RegisterDto) {
@@ -58,18 +58,23 @@ export class AuthController {
    return this.authService.login(dto, req);
    }
 
-
-  @Post('refresh')
-  @Throttle({ default: { limit: 10, ttl: 60_000 } })
-refresh(
+   @Post('refresh')
+async refresh(
+  @Body() dto: refreshTokenDto, //arumar de: "refreshTokenDto para: RefreshTokenDto"
   @Req() req: Request,
-  @Body() body: refreshTokenDto,
-) {
-  const { refresh_token } = body;
-  return this.authService.refreshToken(refresh_token, req);
+)
+{
+  const userAgent =
+    typeof req.headers['user-agent'] === 'string'
+      ? req.headers['user-agent']
+      : 'unknown';
+
+  return this.refreshTokenUseCase.execute(
+    dto.refresh_token,
+    req.ip ?? 'unknown',
+    userAgent,
+  );
 }
-
-
 
   @Post('logout')
   @UseGuards(JwtAuthGuard)
@@ -78,3 +83,4 @@ refresh(
   }
 }
  
+

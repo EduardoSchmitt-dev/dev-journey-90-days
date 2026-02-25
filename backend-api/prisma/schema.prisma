@@ -55,6 +55,7 @@ model RefreshToken {
   replacedByJti String?
   revokedAt     DateTime?
   expiresAt     DateTime
+  revoked       Boolean
   ipAddress     String?
   userAgent     String?
   deviceHash    String?

@@ -6,6 +6,7 @@ import { AuthRepository } from './repositories/auth.repository';
 import { JwtStrategy } from './jwt.strategy';
 import { LoginUseCase } from './use-cases/login.use-case';
 import { SecurityModule } from '../common/security/security.module'; 
+import { RefreshTokenUseCase } from './use-cases/refresh-token.use-case';
 
 @Module({
   imports: [ 
@@ -18,9 +19,9 @@ import { SecurityModule } from '../common/security/security.module';
   controllers: [AuthController],
   providers: [
     AuthService,
-    LoginUseCase,
+    LoginUseCase, RefreshTokenUseCase,
     {
-      provide: 'IAuthRepository',
+      provide: 'IAuthRepository', 
       useClass: AuthRepository,
     },
     JwtStrategy,
