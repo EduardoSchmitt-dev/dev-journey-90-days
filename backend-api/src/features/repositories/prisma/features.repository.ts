@@ -2,10 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/prisma/prisma.service';
 import { IFeaturesRepository } from '../features.repository.interface';
 import { FeatureEntity } from '../../features.repository';
-import { CreateFeatureDto } from '../../dto/create-feature.dto';
- 
- 
-
+import { CreateFeatureDto } from '../../dto/create-feature.dto'
 
 @Injectable()
 export class PrismaFeaturesRepository implements IFeaturesRepository {
@@ -13,19 +10,17 @@ export class PrismaFeaturesRepository implements IFeaturesRepository {
     private readonly prisma: PrismaService,
   ) {}
 
-  async create(data: FeatureEntity): Promise<FeatureEntity> {
-  const created = await this.prisma.feature.create({
+  async create(data: { name: string; description?: string; userId: number }) {
+  return this.prisma.feature.create({
     data: {
       name: data.name,
       description: data.description,
-      userId: data.userId,
+      user: {
+        connect: { id: data.userId },
+      },
     },
   });
-
-  return created;
 }
-
-
 
   async findAll(): Promise<FeatureEntity[]> {
     return this.prisma.feature.findMany({

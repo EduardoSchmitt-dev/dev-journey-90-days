@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PinoLogger, InjectPinoLogger } from 'nestjs-pino';
 import { Request } from 'express';
+import * as bcrypt from 'bcrypt';
 
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
@@ -34,10 +35,13 @@ export class AuthService {
   }
 
   async register(data: RegisterDto) {
-    // aqui você ainda não tem RegisterUseCase, então mantém no service por enquanto
-    // (depois no dia 48/49 você extrai para use-case)
-    return this.authRepository.createUser(data); // ⚠️ se data não tiver planId/senha hash, isso precisa de use-case
-  }
+  const hashedPassword = await bcrypt.hash(data.password, 10);
+
+  return this.authRepository.createUser({
+    email: data.email,
+    password: hashedPassword,
+  });
+}
 
   async refreshToken(refreshToken: string, req: Request) {
     // quando você criar RefreshTokenUseCase, você move pra lá

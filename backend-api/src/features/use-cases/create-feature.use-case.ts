@@ -8,15 +8,15 @@ export class CreateFeatureUseCase {
         private readonly featuresRepository: IFeaturesRepository,
     ) {}
 
-    async execute(userID: number, data: CreateFeatureDto) {
+    async execute(userId: number, data: CreateFeatureDto) {
         const newFeature = {
-         id: Date.now(),
-         name: data.name,
-         description: data.description ?? null,
-         userID,
-         createdAt: new Date(),
-         deletedAt: null, 
-        };
+  id: Date.now(),
+  name: data.name,
+  description: data.description ?? null,
+  userId,  // 👈 CORRETO
+  createdAt: new Date(),
+  deletedAt: null,
+};
 
         return this.featuresRepository.create(newFeature);
     }

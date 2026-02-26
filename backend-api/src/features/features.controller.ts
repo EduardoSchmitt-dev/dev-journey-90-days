@@ -10,8 +10,12 @@ import { AuthUser } from '../auth';
 import { PlanGuard } from '../common/guards/plan.guard';
 import { PlanLimit } from '../common/decorators/plan-limit.decorator';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { Role } from '../users/enums/role.enum';
+import { RolesGuard } from '../common/guards/roles.guards';
+import { Roles } from '../common/decorators/roles.decorator';
 
 
+@UseGuards(JwtAuthGuard)
 @ApiTags('Features')
 @ApiBearerAuth()
 @Controller({
@@ -23,12 +27,11 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
     private readonly featuresService: FeaturesService,
   ) {}
 
-
-
-
+  
+@UseGuards(JwtAuthGuard, RolesGuard, PlanGuard)
+@Roles(Role.ADMIN, Role.PRO)
 @Post()
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, PlanGuard)
 @PlanLimit(3)
 create(
   @Body() createFeatureDto: CreateFeatureDto,
@@ -41,9 +44,6 @@ create(
 findAll(@Query() query: FindFeaturesDto) {
   return this.featuresService.findAll(query);
 }
-
-
-
 
   @Put(':id')
   updatePut(

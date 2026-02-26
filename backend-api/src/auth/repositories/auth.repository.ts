@@ -21,9 +21,26 @@ export class AuthRepository implements IAuthRepository {
     });
   }
 
-  createUser(data: any) {
-    return this.prisma.user.create({ data });
+ async createUser(data: any) {
+  const freePlan = await this.prisma.plan.findUnique({
+    where: { name: 'FREE' },
+  });
+
+  if (!freePlan) {
+    throw new Error('Default FREE plan not found');
   }
+
+  return this.prisma.user.create({
+    data: {
+      email: data.email,
+      password: data.password,
+      role: 'FREE',
+      plan: {
+        connect: { id: freePlan.id },
+      },
+    },
+  });
+}
 
   findPlanByName(name: string) {
     return this.prisma.plan.findUnique({
@@ -33,11 +50,14 @@ export class AuthRepository implements IAuthRepository {
 
   // REFRESH TOKEN
 
-  createRefreshToken(data: any) {
-    return this.prisma.refreshToken.create({
-      data,
-    });
-  }
+ createRefreshToken(data: any) {
+  return this.prisma.refreshToken.create({
+    data: {
+      ...data,
+      revoked: false, // 👈 obrigatório
+    },
+  });
+}
 
   findRefreshTokenByJti(jti: string) {
     return this.prisma.refreshToken.findUnique({

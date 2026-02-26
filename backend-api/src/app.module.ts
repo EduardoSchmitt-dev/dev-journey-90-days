@@ -4,11 +4,14 @@ import { CorrelationIdMiddleware } from './common/middleware/correlation-id.midd
 import { randomUUID } from 'crypto';
 import { HealthController } from './health/health.controller';
 import { PrismaModule } from './infrastructure/prisma/prisma.module';
-
+import { AuthModule } from './auth/auth.module';
+import { FeaturesModule } from './features/features.module';
 
 @Module({
   imports: [ 
-    PrismaModule,
+    PrismaModule, 
+    AuthModule,
+    FeaturesModule,
     LoggerModule.forRoot({
       pinoHttp: {
        level: 'info',

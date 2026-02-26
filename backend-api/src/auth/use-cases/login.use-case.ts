@@ -24,43 +24,68 @@ export class LoginUseCase {
   async execute(dto: LoginDto, req: Request) {
   const identifier = dto.email;
 
+  console.log('📌 LOGIN ATTEMPT EMAIL:', dto.email);
+
   await this.progressiveLock.checkLock(identifier);
 
   const user = await this.authRepository.findUserByEmail(dto.email);
-  
+
+  console.log('📌 USER FROM DB:', user);
+
   if (!user) {
     await this.progressiveLock.registerFailure(identifier);
     throw new UnauthorizedException('Invalid credentials');
   }
 
-    // (se você quiser manter progressive lock aqui, coloca aqui também)
+  console.log('📌 STORED HASH:', user.password);
+  console.log('📌 PASSWORD RECEIVED:', dto.password);
 
-    const passwordValid = await bcrypt.compare(dto.password, user.password);
-    if (!passwordValid) {
+  const passwordValid = await bcrypt.compare(
+    dto.password,
+    user.password
+  );
+
+  console.log('📌 PASSWORD VALID?', passwordValid);
+
+  if (!passwordValid) {
     await this.progressiveLock.registerFailure(identifier);
     throw new UnauthorizedException('Invalid credentials');
-    }
-
-    const refreshJti = randomUUID();
-    const familyId = randomUUID();
-
-    const payload = { sub: user.id, email: user.email, jti: refreshJti };
-
-    const access_token = this.jwtService.sign(payload, { expiresIn: '15m' });
-    const refresh_token = this.jwtService.sign(payload, { expiresIn: '7d' });
-
-    await this.authRepository.createRefreshToken({
-      userId: user.id,
-      hashedToken: await bcrypt.hash(refresh_token, 10),
-      jti: refreshJti,
-      familyId,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      ipAddress: req.ip,
-      userAgent: req.headers['user-agent'] as string,
-      deviceHash: this.generateDeviceHash(req.ip, req.headers['user-agent'] as string),
-    });
-    await this.progressiveLock.reset(identifier);
-
-    return { access_token, refresh_token };
   }
+
+  const refreshJti = randomUUID();
+  const familyId = randomUUID();
+
+  const payload = {
+    sub: user.id,
+    email: user.email,
+    role: user.role,   // 👈 precisa existir
+    jti: refreshJti,
+  };
+
+  const access_token = this.jwtService.sign(payload, {
+    expiresIn: '15m',
+  });
+
+  const refresh_token = this.jwtService.sign(payload, {
+    expiresIn: '7d',
+  });
+
+  await this.authRepository.createRefreshToken({
+    userId: user.id,
+    hashedToken: await bcrypt.hash(refresh_token, 10),
+    jti: refreshJti,
+    familyId,
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    ipAddress: req.ip,
+    userAgent: req.headers['user-agent'] as string,
+    deviceHash: this.generateDeviceHash(
+      req.ip,
+      req.headers['user-agent'] as string
+    ),
+  });
+
+  await this.progressiveLock.reset(identifier);
+
+  return { access_token, refresh_token };
+}
 }

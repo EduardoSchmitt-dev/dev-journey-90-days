@@ -1,7 +1,9 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger } from 'nestjs-pino';
 import { VersioningType } from '@nestjs/common';
+import { RolesGuard } from './common/guards/roles.guards';
+
 
 async function bootstrap() { 
   const app = await NestFactory.create(AppModule, {
