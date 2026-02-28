@@ -21,6 +21,14 @@ export class PrismaFeaturesRepository implements IFeaturesRepository {
     },
   });
 }
+async findAllByUser(userId: number): Promise<FeatureEntity[]> {
+  return this.prisma.feature.findMany({
+    where: {
+      userId,
+      deletedAt: null,
+    },
+  });
+}
 
   async findAll(): Promise<FeatureEntity[]> {
     return this.prisma.feature.findMany({

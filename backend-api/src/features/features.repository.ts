@@ -7,8 +7,6 @@ export interface FeatureEntity {
   deletedAt: Date | null;
 }
 
-
-
 export class FeaturesRepository {
   protected features: FeatureEntity[] = [];
 

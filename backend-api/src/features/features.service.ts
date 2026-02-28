@@ -29,9 +29,9 @@ import { IFeaturesRepository } from './repositories/features.repository.interfac
    return this.removeFeatureUseCase.execute(id);
  }
 
-  async findAll(query: FindFeaturesDto) {
-    return this.featuresRepository.findAll()
-  }
+  async findAll(userId: number) {
+  return this.featuresRepository.findAllByUser(userId);
 }
+ }
 
 

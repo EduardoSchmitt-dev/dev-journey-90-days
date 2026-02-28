@@ -41,8 +41,8 @@ create(
 }
 
 @Get()
-findAll(@Query() query: FindFeaturesDto) {
-  return this.featuresService.findAll(query);
+findAll(@CurrentUser() user: AuthUser,
+) { return this.featuresService.findAll(user.userId);
 }
 
   @Put(':id')
