@@ -29,19 +29,23 @@ import { IFeaturesRepository } from './repositories/features.repository.interfac
    return this.removeFeatureUseCase.execute(id);
  }
 
-  async findAll(
+async findAll(
   userId: number,
   page: number,
   limit: number,
   search?: string,
+  orderBy?: string,
+  order?: 'asc' | 'desc',
 ) {
   return this.featuresRepository.findAllByUserPaginated(
     userId,
     page,
     limit,
     search,
-   );
-  }
+    orderBy,
+    order,
+  );
+}
 }
 
 

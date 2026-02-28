@@ -13,5 +13,7 @@ export interface IFeaturesRepository {
   page: number,
   limit: number,
   search?: string,
- ): Promise<any>;
+  orderBy?: string,
+  order?: 'asc' | 'desc',
+): Promise<any>;
 }

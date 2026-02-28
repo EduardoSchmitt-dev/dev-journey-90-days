@@ -30,13 +30,23 @@ async findAllByUser(userId: number): Promise<FeatureEntity[]> {
   });
 }
 
-  async findAllByUserPaginated(
+ async findAllByUserPaginated(
   userId: number,
   page: number,
   limit: number,
   search?: string,
+  orderBy?: string,
+  order: 'asc' | 'desc' = 'desc',
 ) {
   const skip = (page - 1) * limit;
+
+  // 🔐 whitelist para evitar order injection
+  const allowedOrderFields = ['name', 'createdAt'];
+
+  const safeOrderBy: 'name' | 'createdAt' =
+  allowedOrderFields.includes(orderBy ?? '')
+    ? (orderBy as 'name' | 'createdAt')
+    : 'createdAt';
 
   const where: any = {
     userId,
@@ -56,12 +66,10 @@ async findAllByUser(userId: number): Promise<FeatureEntity[]> {
       skip,
       take: limit,
       orderBy: {
-        createdAt: 'desc',
+        [safeOrderBy]: order,
       },
     }),
-    this.prisma.feature.count({
-      where,
-    }),
+    this.prisma.feature.count({ where }),
   ]);
 
   return {
@@ -71,6 +79,8 @@ async findAllByUser(userId: number): Promise<FeatureEntity[]> {
       page,
       lastPage: Math.ceil(total / limit),
       limit,
+      orderBy: safeOrderBy,
+      order,
     },
   };
 }

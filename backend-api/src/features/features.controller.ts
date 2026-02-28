@@ -41,17 +41,22 @@ create(
 }
 
 @Get()
+@Get()
 findAll(
   @CurrentUser() user: AuthUser,
   @Query('page') page = '1',
   @Query('limit') limit = '10',
   @Query('search') search?: string,
+  @Query('orderBy') orderBy = 'createdAt',
+  @Query('order') order: 'asc' | 'desc' = 'desc',
 ) {
   return this.featuresService.findAll(
     user.userId,
     Number(page),
     Number(limit),
     search,
+    orderBy,
+    order,
   );
 }
 
