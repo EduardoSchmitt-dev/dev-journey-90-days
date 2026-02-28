@@ -34,15 +34,25 @@ async findAllByUser(userId: number): Promise<FeatureEntity[]> {
   userId: number,
   page: number,
   limit: number,
+  search?: string,
 ) {
   const skip = (page - 1) * limit;
 
+  const where: any = {
+    userId,
+    deletedAt: null,
+  };
+
+  if (search) {
+    where.name = {
+      contains: search,
+      mode: 'insensitive',
+    };
+  }
+
   const [data, total] = await Promise.all([
     this.prisma.feature.findMany({
-      where: {
-        userId,
-        deletedAt: null,
-      },
+      where,
       skip,
       take: limit,
       orderBy: {
@@ -50,10 +60,7 @@ async findAllByUser(userId: number): Promise<FeatureEntity[]> {
       },
     }),
     this.prisma.feature.count({
-      where: {
-        userId,
-        deletedAt: null,
-      },
+      where,
     }),
   ]);
 

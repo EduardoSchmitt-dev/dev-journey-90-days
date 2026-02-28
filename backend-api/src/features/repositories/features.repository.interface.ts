@@ -12,5 +12,6 @@ export interface IFeaturesRepository {
   userId: number,
   page: number,
   limit: number,
-): Promise<any>;
+  search?: string,
+ ): Promise<any>;
 }

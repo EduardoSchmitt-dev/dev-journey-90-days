@@ -45,11 +45,13 @@ findAll(
   @CurrentUser() user: AuthUser,
   @Query('page') page = '1',
   @Query('limit') limit = '10',
+  @Query('search') search?: string,
 ) {
   return this.featuresService.findAll(
     user.userId,
     Number(page),
     Number(limit),
+    search,
   );
 }
 
