@@ -29,8 +29,12 @@ import { IFeaturesRepository } from './repositories/features.repository.interfac
    return this.removeFeatureUseCase.execute(id);
  }
 
-  async findAll(userId: number) {
-  return this.featuresRepository.findAllByUser(userId);
+  async findAll(userId: number, page: number, limit: number) {
+  return this.featuresRepository.findAllByUserPaginated(
+    userId,
+    page,
+    limit,
+  );
 }
  }
 

@@ -41,8 +41,16 @@ create(
 }
 
 @Get()
-findAll(@CurrentUser() user: AuthUser,
-) { return this.featuresService.findAll(user.userId);
+findAll(
+  @CurrentUser() user: AuthUser,
+  @Query('page') page = '1',
+  @Query('limit') limit = '10',
+) {
+  return this.featuresService.findAll(
+    user.userId,
+    Number(page),
+    Number(limit),
+  );
 }
 
   @Put(':id')

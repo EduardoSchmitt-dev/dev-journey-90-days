@@ -30,6 +30,44 @@ async findAllByUser(userId: number): Promise<FeatureEntity[]> {
   });
 }
 
+  async findAllByUserPaginated(
+  userId: number,
+  page: number,
+  limit: number,
+) {
+  const skip = (page - 1) * limit;
+
+  const [data, total] = await Promise.all([
+    this.prisma.feature.findMany({
+      where: {
+        userId,
+        deletedAt: null,
+      },
+      skip,
+      take: limit,
+      orderBy: {
+        createdAt: 'desc',
+      },
+    }),
+    this.prisma.feature.count({
+      where: {
+        userId,
+        deletedAt: null,
+      },
+    }),
+  ]);
+
+  return {
+    data,
+    meta: {
+      total,
+      page,
+      lastPage: Math.ceil(total / limit),
+      limit,
+    },
+  };
+}
+
   async findAll(): Promise<FeatureEntity[]> {
     return this.prisma.feature.findMany({
       where: {

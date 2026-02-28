@@ -8,4 +8,9 @@ export interface IFeaturesRepository {
   softDelete(id: number): Promise<any>;
 
   findAllByUser(userId: number): Promise<Feature[]>;
+  findAllByUserPaginated(
+  userId: number,
+  page: number,
+  limit: number,
+): Promise<any>;
 }
