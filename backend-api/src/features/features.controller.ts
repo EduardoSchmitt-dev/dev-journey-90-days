@@ -52,6 +52,7 @@ findAll(
   query.search,
   query.orderBy ?? 'createdAt',
   query.order ?? 'desc',
+  query.cursor,
 );
 }
 

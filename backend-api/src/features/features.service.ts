@@ -6,10 +6,12 @@ import { UpdateFeatureUseCase } from './use-cases/update-feature.use-case';
 import { RemoveFeatureUseCase } from './use-cases/remove-feature.use-case';
 import { FindFeaturesDto } from './dto/find-features.dto';
 import { IFeaturesRepository } from './repositories/features.repository.interface';
+import { features } from 'process';
+import { PrismaService } from '../infrastructure/prisma/prisma.service';
 
 @Injectable()
  export class FeaturesService {
-   constructor(
+   constructor( private readonly prisma: PrismaService,
    private readonly createFeaturesUseCase: CreateFeatureUseCase,
    private readonly updateFeatureUseCase: UpdateFeatureUseCase,
    private readonly removeFeatureUseCase: RemoveFeatureUseCase,
@@ -34,17 +36,48 @@ async findAll(
   page: number,
   limit: number,
   search?: string,
-  orderBy?: string,
-  order?: 'asc' | 'desc',
+  orderBy: string = 'createdAt',
+  order: 'asc' | 'desc' = 'desc',
+  cursor?: number,
 ) {
-  return this.featuresRepository.findAllByUserPaginated(
+  const where = {
     userId,
-    page,
-    limit,
-    search,
-    orderBy,
-    order,
-  );
+    deletedAt: null,
+    ...(search && {
+      name: {
+        contains: search,
+        mode: 'insensitive',
+      },
+    }),
+  };
+
+  const take = limit;
+
+  const queryOptions: any = {
+    where,
+    take,
+    orderBy: {
+      [orderBy]: order,
+    },
+  };
+
+  if (cursor) {
+    queryOptions.cursor = { id: cursor };
+    queryOptions.skip = 1;
+  }
+
+  const features = await this.prisma.feature.findMany(queryOptions);
+
+  const nextCursor =
+    features.length === take ? features[features.length - 1].id : null;
+
+  return {
+    data: features,
+    meta: {
+      nextCursor,
+      limit,
+    },
+  };
 }
 }
 

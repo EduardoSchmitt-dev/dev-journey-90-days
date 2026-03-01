@@ -16,6 +16,11 @@ export class PaginationQueryDto {
   limit?: number = 10;
 
   @IsOptional()
+  @Type(() => Number) 
+  @IsInt()
+  cursor?: number;
+
+  @IsOptional()
   @IsString()
   search?: string;
 
