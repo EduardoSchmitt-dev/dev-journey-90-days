@@ -16,6 +16,12 @@ model Feature {
   deletedAt   DateTime?
 
   user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@index([name])
+  @@index([userId, createdAt])
 }
 
 model Plan {
