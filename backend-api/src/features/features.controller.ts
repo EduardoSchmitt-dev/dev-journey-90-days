@@ -41,23 +41,18 @@ create(
 }
 
 @Get()
-@Get()
 findAll(
   @CurrentUser() user: AuthUser,
-  @Query('page') page = '1',
-  @Query('limit') limit = '10',
-  @Query('search') search?: string,
-  @Query('orderBy') orderBy = 'createdAt',
-  @Query('order') order: 'asc' | 'desc' = 'desc',
+  @Query() query: PaginationQueryDto,
 ) {
   return this.featuresService.findAll(
-    user.userId,
-    Number(page),
-    Number(limit),
-    search,
-    orderBy,
-    order,
-  );
+  user.userId,
+  query.page ?? 1,
+  query.limit ?? 10,
+  query.search,
+  query.orderBy ?? 'createdAt',
+  query.order ?? 'desc',
+);
 }
 
   @Put(':id')

@@ -1,6 +1,5 @@
-import { IsIn, IsInt, IsOptional, Min, Max } from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString, Min, Max, } from 'class-validator';
 import { Type } from 'class-transformer';
-
 
 export class PaginationQueryDto {
   @IsOptional()
@@ -15,6 +14,14 @@ export class PaginationQueryDto {
   @Min(1)
   @Max(100)
   limit?: number = 10;
+
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @IsOptional()
+  @IsString()
+  orderBy?: string = 'createdAt';
 
   @IsOptional()
   @IsIn(['asc', 'desc'])
