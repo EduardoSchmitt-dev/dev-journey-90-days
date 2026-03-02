@@ -47,10 +47,8 @@ findAll(
 ) {
   return this.featuresService.findAll(
   user.userId,
-  query.page ?? 1,
   query.limit ?? 10,
   query.search,
-  query.orderBy ?? 'createdAt',
   query.order ?? 'desc',
   query.cursor,
 );

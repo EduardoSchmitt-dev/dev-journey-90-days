@@ -33,51 +33,49 @@ import { PrismaService } from '../infrastructure/prisma/prisma.service';
 
 async findAll(
   userId: number,
-  page: number,
   limit: number,
   search?: string,
-  orderBy: string = 'createdAt',
   order: 'asc' | 'desc' = 'desc',
   cursor?: number,
 ) {
   const where = {
-    userId,
-    deletedAt: null,
-    ...(search && {
-      name: {
-        contains: search,
-        mode: 'insensitive',
-      },
-    }),
-  };
-
-  const take = limit;
-
-  const queryOptions: any = {
-    where,
-    take,
-    orderBy: {
-      [orderBy]: order,
+  userId,
+  deletedAt: null,
+  ...(search && {
+    name: {
+      contains: search,
+      mode: 'insensitive',
     },
-  };
+  }),
+};
 
-  if (cursor) {
-    queryOptions.cursor = { id: cursor };
-    queryOptions.skip = 1;
-  }
+const queryOptions: any = {
+  where,
+  take: limit,
+  orderBy: {
+    id: order,
+  },
+};
 
-  const features = await this.prisma.feature.findMany(queryOptions);
+if (cursor) {
+  queryOptions.cursor = { id: cursor };
+  queryOptions.skip = 1;
+}
 
-  const nextCursor =
-    features.length === take ? features[features.length - 1].id : null;
+const features = await this.prisma.feature.findMany(queryOptions);
 
-  return {
-    data: features,
-    meta: {
-      nextCursor,
-      limit,
-    },
-  };
+const nextCursor =
+  features.length === limit
+    ? features[features.length - 1].id
+    : null;
+
+return {
+  data: features,
+  meta: {
+    nextCursor,
+    limit,
+  },
+};
 }
 }
 
