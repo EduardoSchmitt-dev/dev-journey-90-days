@@ -1,13 +1,14 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger } from 'nestjs-pino';
-import { VersioningType } from '@nestjs/common';
-import { ValidationPipe } from '@nestjs/common';
+import { VersioningType, ValidationPipe } from '@nestjs/common';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
-async function bootstrap() { 
+async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
-  }); 
+  });
+
   app.useLogger(app.get(Logger));
 
   app.setGlobalPrefix('api');
@@ -16,18 +17,29 @@ async function bootstrap() {
     type: VersioningType.URI,
     defaultVersion: '1'
   });
- 
-  app.enableShutdownHooks();
 
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // remove campos não permitidos
-      forbidNonWhitelisted: true, // erro se enviar campo extra
-      transform: true, //  tranforma query params em número automaticamente
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
     }),
   );
 
-  await app.listen(3000); 
+  const config = new DocumentBuilder()
+    .setTitle('Dev Journey API')
+    .setDescription('API do projeto Dev Journey')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, document);
+
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+
+  console.log(`🚀 Server running on http://localhost:${port}`);
 }
-  
+
 bootstrap();
