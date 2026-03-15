@@ -1,9 +1,9 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const plans = ["Free", "Pro", "Enterprise"];
+  const plans = ['FREE', 'PRO', 'ENTERPRISE'];
 
   for (const name of plans) {
     await prisma.plan.upsert({
@@ -13,24 +13,12 @@ async function main() {
     });
   }
 
-  console.log("Plans seeded successfully.");
-
-  const freePlan = await prisma.plan.findUnique({
-    where: { name: "Free" },
-  });
-
-  if (freePlan) {
-    await prisma.user.updateMany({
-  data: { planId: freePlan.id },
-  })
-}
-
-  console.log("Users updated with Free plan.");
+  console.log('Plans seeded successfully.');
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error('Seed error:', e);
     process.exit(1);
   })
   .finally(async () => {
