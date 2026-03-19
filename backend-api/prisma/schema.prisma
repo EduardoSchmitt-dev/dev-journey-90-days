@@ -25,8 +25,12 @@ model Feature {
 }
 
 model Plan {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  maxFeatures        Int @default(3)
+  rateLimitPerMinute Int @default(10)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -40,19 +44,19 @@ enum Role {
 }
 
 model User {
-  id              Int       @id @default(autoincrement())
-  email           String    @unique
-  password        String
-  role            Role      @default(FREE)
-  refreshToken    String?
-  refreshTokenJti String?
-  planId          Int
-  failedLoginAttempts Int   @default(0)
-  lockUntil       DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  features        Feature[]
+  id                  Int       @id @default(autoincrement())
+  email               String    @unique
+  password            String
+  role                Role      @default(FREE)
+  refreshToken        String?
+  refreshTokenJti     String?
+  planId              Int
+  failedLoginAttempts Int       @default(0)
+  lockUntil           DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  features Feature[]
 
   plan          Plan           @relation(fields: [planId], references: [id])
   refreshTokens RefreshToken[]
@@ -76,5 +80,3 @@ model RefreshToken {
 
   user User @relation(fields: [userId], references: [id])
 }
-
-

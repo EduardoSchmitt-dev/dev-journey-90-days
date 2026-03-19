@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Plan" ADD COLUMN     "maxFeatures" INTEGER NOT NULL DEFAULT 3,
+ADD COLUMN     "rateLimitPerMinute" INTEGER NOT NULL DEFAULT 10;
