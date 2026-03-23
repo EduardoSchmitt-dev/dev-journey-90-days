@@ -13,7 +13,7 @@ import { AuthModule } from './auth/auth.module';
 import { FeaturesModule } from './features/features.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerGuard } from '@nestjs/throttler';
+import { PlanThrottlerGuard } from './common/guards/plan-throttler.guard';
 
 @Module({
   imports: [
@@ -44,7 +44,7 @@ import { ThrottlerGuard } from '@nestjs/throttler';
   providers: [
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: PlanThrottlerGuard,
     },
   ],
 })
