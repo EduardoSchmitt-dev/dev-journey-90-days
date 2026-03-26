@@ -21,7 +21,8 @@ import { AuthUser } from '../auth';
 import { PlanGuard } from '../common/guards/plan.guard';
 import { PlanLimit } from '../common/decorators/plan-limit.decorator';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-@UseGuards(JwtAuthGuard)
+import { PlanThrottlerGuard } from '../common/guards/plan-throttler.guard';
+@UseGuards(JwtAuthGuard, PlanThrottlerGuard)
 @ApiTags('Features')
 @ApiBearerAuth()
 @Controller({
@@ -31,7 +32,7 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 export class FeaturesController {
   constructor(private readonly featuresService: FeaturesService) {}
 
-  @UseGuards(JwtAuthGuard, PlanGuard)
+  @UseGuards(PlanGuard) // metodo create tem um limite de 3 por plano, então aplicamos o PlanGuard para verificar o plano do usuário antes de aplicar o limite
   @Post()
   @ApiBearerAuth()
   @PlanLimit(3)

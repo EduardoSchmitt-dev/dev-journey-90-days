@@ -1,56 +1,80 @@
-import { ExecutionContext, Injectable } from '@nestjs/common';
-import { ThrottlerGuard } from '@nestjs/throttler';
-import { Request } from 'express';
-import { PLAN_RATE_LIMIT } from '../constants/plan-rate-limit';
-import { AuthUser } from '../../auth/interfaces/auth-user.interface';
-
-type AuthenticatedRequest = Request & {
-  user?: AuthUser;
-};
+import { Injectable } from '@nestjs/common';
+import { ThrottlerGuard, ThrottlerRequest } from '@nestjs/throttler';
+import { Request, Response } from 'express';
+import { PLAN_RATE_LIMITS } from '../constants/rate-limit.constants';
+import { AuthenticatedRequest } from '../interfaces/authenticated-request.interface';
 
 @Injectable()
 export class PlanThrottlerGuard extends ThrottlerGuard {
+  protected async handleRequest(
+    requestProps: ThrottlerRequest,
+  ): Promise<boolean> {
+    const { context, throttler, blockDuration, getTracker, generateKey } =
+      requestProps;
+
+    const { req, res } = this.getRequestResponse(context) as {
+      req: Request;
+      res: Response;
+    };
+
+    const request = req as AuthenticatedRequest;
+
+    const planName = request.user?.plan?.toUpperCase();
+    const planRate =
+      PLAN_RATE_LIMITS[planName as keyof typeof PLAN_RATE_LIMITS] ??
+      PLAN_RATE_LIMITS.DEFAULT;
+
+    const tracker = await getTracker(req, context);
+    const throttlerName = throttler.name ?? 'default';
+    const key = generateKey(context, tracker, throttlerName);
+
+    const { totalHits, timeToExpire, isBlocked, timeToBlockExpire } =
+      await this.storageService.increment(
+        key,
+        planRate.ttl,
+        planRate.limit,
+        blockDuration,
+        throttlerName,
+      );
+
+    const suffix = throttlerName === 'default' ? '' : `-${throttlerName}`;
+
+    res.header(`${this.headerPrefix}-Limit${suffix}`, String(planRate.limit));
+    res.header(
+      `${this.headerPrefix}-Remaining${suffix}`,
+      String(Math.max(0, planRate.limit - totalHits)),
+    );
+    res.header(`${this.headerPrefix}-Reset${suffix}`, String(timeToExpire));
+
+    if (isBlocked) {
+      res.header(`Retry-After${suffix}`, String(timeToBlockExpire));
+
+      await this.throwThrottlingException(context, {
+        limit: planRate.limit,
+        ttl: planRate.ttl,
+        key,
+        tracker,
+        totalHits,
+        timeToExpire,
+        isBlocked,
+        timeToBlockExpire,
+      });
+    }
+
+    return true;
+  }
+
   protected getTracker(req: Record<string, unknown>): Promise<string> {
-    const ip = req['ip'];
+    const request = req as unknown as AuthenticatedRequest;
 
-    if (typeof ip === 'string') {
-      return Promise.resolve(ip);
+    if (request.user?.userId) {
+      return Promise.resolve(`user:${request.user.userId}`);
     }
 
-    return Promise.resolve('unknown');
-  }
-
-  protected getLimit(context: ExecutionContext): Promise<number> {
-    const request = this.getRequestResponse(context)
-      .req as AuthenticatedRequest;
-    const user = request.user;
-
-    if (!user || !user.plan) {
-      return Promise.resolve(PLAN_RATE_LIMIT.FREE.limit);
+    if (typeof request.ip === 'string') {
+      return Promise.resolve(`ip:${request.ip}`);
     }
 
-    const planName = user.plan.toUpperCase();
-
-    return Promise.resolve(
-      PLAN_RATE_LIMIT[planName as keyof typeof PLAN_RATE_LIMIT]?.limit ??
-        PLAN_RATE_LIMIT.FREE.limit,
-    );
-  }
-
-  protected getTtl(context: ExecutionContext): Promise<number> {
-    const request = this.getRequestResponse(context)
-      .req as AuthenticatedRequest;
-    const user = request.user;
-
-    if (!user || !user.plan) {
-      return Promise.resolve(PLAN_RATE_LIMIT.FREE.ttl);
-    }
-
-    const planName = user.plan.toUpperCase();
-
-    return Promise.resolve(
-      PLAN_RATE_LIMIT[planName as keyof typeof PLAN_RATE_LIMIT]?.ttl ??
-        PLAN_RATE_LIMIT.FREE.ttl,
-    );
+    return Promise.resolve('ip:unknown');
   }
 }

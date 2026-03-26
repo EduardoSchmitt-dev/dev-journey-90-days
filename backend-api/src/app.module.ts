@@ -12,8 +12,6 @@ import { PrismaModule } from './infrastructure/prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { FeaturesModule } from './features/features.module';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
-import { PlanThrottlerGuard } from './common/guards/plan-throttler.guard';
 
 @Module({
   imports: [
@@ -41,12 +39,7 @@ import { PlanThrottlerGuard } from './common/guards/plan-throttler.guard';
     }),
   ],
   controllers: [HealthController],
-  providers: [
-    {
-      provide: APP_GUARD,
-      useClass: PlanThrottlerGuard,
-    },
-  ],
+  providers: [],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
