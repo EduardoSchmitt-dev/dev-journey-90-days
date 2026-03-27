@@ -44,12 +44,12 @@ export class FeaturesService {
     });
   }
 
-  async update(id: number, dto: UpdateFeatureDto) {
-    return this.updateFeatureUseCase.execute(id, dto);
+  async update(id: number, userId: number, updateFeatureDto: UpdateFeatureDto) {
+    return this.updateFeatureUseCase.execute(id, userId, updateFeatureDto);
   }
 
-  async remove(id: number) {
-    return this.removeFeatureUseCase.execute(id);
+  async remove(id: number, userId: number) {
+    return this.removeFeatureUseCase.execute(id, userId);
   }
 
   async findAll(
@@ -62,13 +62,14 @@ export class FeaturesService {
     const where: Prisma.FeatureWhereInput = {
       userId,
       deletedAt: null,
-      ...(search && {
-        name: {
-          contains: search,
-          mode: 'insensitive',
-        },
-      }),
     };
+
+    if (search) {
+      where.name = {
+        contains: search,
+        mode: 'insensitive',
+      };
+    }
 
     const queryOptions: Prisma.FeatureFindManyArgs = {
       where,

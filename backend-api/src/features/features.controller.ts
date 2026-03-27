@@ -32,7 +32,7 @@ import { PlanThrottlerGuard } from '../common/guards/plan-throttler.guard';
 export class FeaturesController {
   constructor(private readonly featuresService: FeaturesService) {}
 
-  @UseGuards(PlanGuard) // metodo create tem um limite de 3 por plano, então aplicamos o PlanGuard para verificar o plano do usuário antes de aplicar o limite
+  @UseGuards(PlanGuard) // metodo create tem um limite de 3 por plano, então aplicamos o PlanGuard para verificar o plano do usuário antes de aplicar o limitespo
   @Post()
   @ApiBearerAuth()
   @PlanLimit(3)
@@ -58,20 +58,22 @@ export class FeaturesController {
   updatePut(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateFeatureDto: UpdateFeatureDto,
+    @CurrentUser() user: AuthUser,
   ) {
-    return this.featuresService.update(id, updateFeatureDto);
+    return this.featuresService.update(id, user.userId, updateFeatureDto);
   }
 
   @Patch(':id')
   updatePatch(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateFeatureDto: UpdateFeatureDto,
+    @CurrentUser() user: AuthUser,
   ) {
-    return this.featuresService.update(id, updateFeatureDto);
+    return this.featuresService.update(id, user.userId, updateFeatureDto);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.featuresService.remove(id);
+  remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
+    return this.featuresService.remove(id, user.userId);
   }
 }

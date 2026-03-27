@@ -1,19 +1,22 @@
-import { Feature } from '@prisma/client';
+import { UpdateFeatureDto } from '../dto/update-feature.dto';
+import { FeatureEntity } from '../features.repository';
 
 export interface IFeaturesRepository {
-  create(data: any): Promise<Feature>;
-  findAll(): Promise<Feature[]>;
-  findById(id: number): Promise<Feature | null>;
-  update(id: number, data: any): Promise<Feature>;
-  softDelete(id: number): Promise<any>;
+  create(data: {
+    name: string;
+    description?: string;
+    userId: number;
+  }): Promise<FeatureEntity>;
 
-  findAllByUser(userId: number): Promise<Feature[]>;
-  findAllByUserPaginated(
-  userId: number,
-  page: number,
-  limit: number,
-  search?: string,
-  orderBy?: string,
-  order?: 'asc' | 'desc',
-): Promise<any>;
+  findById(id: number): Promise<FeatureEntity | null>;
+
+  findByIdAndUserId(id: number, userId: number): Promise<FeatureEntity | null>;
+
+  findAll(): Promise<FeatureEntity[]>;
+
+  update(id: number, dto: UpdateFeatureDto): Promise<FeatureEntity>;
+
+  countByUser(userId: number): Promise<number>;
+
+  softDelete(id: number): Promise<void>;
 }
