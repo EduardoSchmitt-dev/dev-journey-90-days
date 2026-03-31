@@ -56,6 +56,7 @@ export class FeaturesService {
     userId: number,
     limit: number,
     search?: string,
+    orderBy: 'name' | 'createdAt' = 'createdAt',
     order: 'asc' | 'desc' = 'desc',
     cursor?: number,
   ) {
@@ -75,7 +76,7 @@ export class FeaturesService {
       where,
       take: limit,
       orderBy: {
-        id: order,
+        [orderBy]: order,
       },
     };
 
@@ -94,6 +95,9 @@ export class FeaturesService {
       meta: {
         nextCursor,
         limit,
+        orderBy,
+        order,
+        search: search ?? null,
       },
     };
   }

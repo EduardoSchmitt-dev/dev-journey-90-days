@@ -49,6 +49,7 @@ export class FeaturesController {
       user.userId,
       query.limit ?? 10,
       query.search,
+      query.orderBy ?? 'createdAt',
       query.order ?? 'desc',
       query.cursor,
     );
