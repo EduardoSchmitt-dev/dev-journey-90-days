@@ -47,8 +47,10 @@ export class PaginationQueryDto {
   @ApiPropertyOptional({
     description: 'Field used for sorting',
     example: 'createdAt',
+    enum: ['createdAt', 'name'],
+    default: 'createdAt',
   })
   @IsOptional()
-  @IsString()
-  orderBy?: string;
+  @IsIn(['createdAt', 'name'])
+  orderBy?: 'createdAt' | 'name' = 'createdAt';
 }
