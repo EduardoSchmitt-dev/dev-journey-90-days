@@ -3,11 +3,15 @@ import { AppModule } from './app.module';
 import { Logger } from 'nestjs-pino';
 import { VersioningType, ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
   });
+
+  const correlationIdMiddleware = new CorrelationIdMiddleware();
+  app.use(correlationIdMiddleware.use.bind(correlationIdMiddleware));
 
   app.useLogger(app.get(Logger));
 
@@ -15,7 +19,7 @@ async function bootstrap() {
 
   app.enableVersioning({
     type: VersioningType.URI,
-    defaultVersion: '1'
+    defaultVersion: '1',
   });
 
   app.useGlobalPipes(
@@ -42,4 +46,4 @@ async function bootstrap() {
   console.log(`🚀 Server running on http://localhost:${port}`);
 }
 
-bootstrap();
+void bootstrap();

@@ -7,7 +7,7 @@ export class CorrelationIdMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     const requestId = req.headers['x-request-id'] || randomUUID();
 
-    req.requestId
+    req.requestId = String(requestId);
     res.setHeader('x-request-id', requestId);
 
     next();
