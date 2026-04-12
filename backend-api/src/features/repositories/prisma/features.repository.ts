@@ -2,88 +2,86 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/prisma/prisma.service';
 import { IFeaturesRepository } from '../features.repository.interface';
 import { FeatureEntity } from '../../features.repository';
-import { CreateFeatureDto } from '../../dto/create-feature.dto'
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class PrismaFeaturesRepository implements IFeaturesRepository {
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(data: { name: string; description?: string; userId: number }) {
-  return this.prisma.feature.create({
-    data: {
-      name: data.name,
-      description: data.description,
-      user: {
-        connect: { id: data.userId },
+    return this.prisma.feature.create({
+      data: {
+        name: data.name,
+        description: data.description,
+        user: {
+          connect: { id: data.userId },
+        },
       },
-    },
-  });
-}
-async findAllByUser(userId: number): Promise<FeatureEntity[]> {
-  return this.prisma.feature.findMany({
-    where: {
-      userId,
-      deletedAt: null,
-    },
-  });
-}
-
- async findAllByUserPaginated(
-  userId: number,
-  page: number,
-  limit: number,
-  search?: string,
-  orderBy?: string,
-  order: 'asc' | 'desc' = 'desc',
-) {
-  const skip = (page - 1) * limit;
-
-  // 🔐 whitelist para evitar order injection
-  const allowedOrderFields = ['name', 'createdAt'];
-
-  const safeOrderBy: 'name' | 'createdAt' =
-  allowedOrderFields.includes(orderBy ?? '')
-    ? (orderBy as 'name' | 'createdAt')
-    : 'createdAt';
-
-  const where: any = {
-    userId,
-    deletedAt: null,
-  };
-
-  if (search) {
-    where.name = {
-      contains: search,
-      mode: 'insensitive',
-    };
+    });
+  }
+  async findAllByUser(userId: number): Promise<FeatureEntity[]> {
+    return this.prisma.feature.findMany({
+      where: {
+        userId,
+        deletedAt: null,
+      },
+    });
   }
 
-  const [data, total] = await Promise.all([
-    this.prisma.feature.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: {
-        [safeOrderBy]: order,
-      },
-    }),
-    this.prisma.feature.count({ where }),
-  ]);
+  async findAllByUserPaginated(
+    userId: number,
+    page: number,
+    limit: number,
+    search?: string,
+    orderBy?: string,
+    order: 'asc' | 'desc' = 'desc',
+  ) {
+    const skip = (page - 1) * limit;
 
-  return {
-    data,
-    meta: {
-      total,
-      page,
-      lastPage: Math.ceil(total / limit),
-      limit,
-      orderBy: safeOrderBy,
-      order,
-    },
-  };
-}
+    const allowedOrderFields = ['name', 'createdAt'];
+
+    const safeOrderBy: 'name' | 'createdAt' = allowedOrderFields.includes(
+      orderBy ?? '',
+    )
+      ? (orderBy as 'name' | 'createdAt')
+      : 'createdAt';
+
+    const where: Prisma.FeatureWhereInput = {
+      userId,
+      deletedAt: null,
+    };
+
+    if (search) {
+      where.name = {
+        contains: search,
+        mode: 'insensitive',
+      };
+    }
+
+    const [data, total] = await Promise.all([
+      this.prisma.feature.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: {
+          [safeOrderBy]: order,
+        },
+      }),
+      this.prisma.feature.count({ where }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        lastPage: Math.ceil(total / limit),
+        limit,
+        orderBy: safeOrderBy,
+        order,
+      },
+    };
+  }
 
   async findAll(): Promise<FeatureEntity[]> {
     return this.prisma.feature.findMany({
@@ -102,10 +100,16 @@ async findAllByUser(userId: number): Promise<FeatureEntity[]> {
     });
   }
 
-  async update(
-    id: number,
-    feature: FeatureEntity,
-  ): Promise<FeatureEntity> {
+  async findByName(name: string): Promise<FeatureEntity | null> {
+    return this.prisma.feature.findFirst({
+      where: {
+        name,
+        deletedAt: null,
+      },
+    });
+  }
+
+  async update(id: number, feature: FeatureEntity): Promise<FeatureEntity> {
     return this.prisma.feature.update({
       where: { id },
       data: {
@@ -115,15 +119,15 @@ async findAllByUser(userId: number): Promise<FeatureEntity[]> {
       },
     });
   }
-   async countByUser(userId: number): Promise<number> {
-  return this.prisma.feature.count({
-    where: {
-      userId,
-      deletedAt: null,
-    },
-  });
-}
-  
+  async countByUser(userId: number): Promise<number> {
+    return this.prisma.feature.count({
+      where: {
+        userId,
+        deletedAt: null,
+      },
+    });
+  }
+
   async softDelete(id: number): Promise<void> {
     await this.prisma.feature.update({
       where: { id },
