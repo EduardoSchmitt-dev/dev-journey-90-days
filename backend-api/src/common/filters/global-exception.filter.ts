@@ -1,12 +1,8 @@
-import {
-  ExceptionFilter,
-  Catch,
-  ArgumentsHost,
-  HttpException,
-  HttpStatus,
-} from '@nestjs/common';
+import { ExceptionFilter,  Catch,  ArgumentsHost, HttpException, HttpStatus, } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { Prisma } from '@prisma/client';
+import { timestamp } from 'rxjs';
+
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -15,71 +11,46 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
+    
     // Tratamento do Prisma
     if (exception instanceof Prisma.PrismaClientKnownRequestError) {
       if (exception.code === 'P2002') {
-        return response.status(HttpStatus.CONFLICT).json({
-          statusCode: HttpStatus.CONFLICT,
+        return response.status(409).json({
+          statusCode: 409,
           error: 'Conflict',
           message: 'Resource already exists',
           path: request.url,
           timestamp: new Date().toISOString(),
         });
       }
+    
 
-      if (exception.code === 'P2025') {
-        return response.status(HttpStatus.NOT_FOUND).json({
-          statusCode: HttpStatus.NOT_FOUND,
-          error: 'Not Found',
-          message: 'Resource not found',
-          path: request.url,
-          timestamp: new Date().toISOString(),
-        });
-      }
-    }
-
-    if (exception instanceof HttpException) {
-      const status = exception.getStatus();
-      const exceptionResponse = exception.getResponse();
-
-      let message: string | string[] = 'Unexpected error';
-      let error = HttpStatus[status] ?? 'Error';
-
-      if (typeof exceptionResponse === 'string') {
-        message = exceptionResponse;
-      } else if (
-        typeof exceptionResponse === 'object' &&
-        exceptionResponse !== null
-      ) {
-        const responseBody = exceptionResponse as {
-          message?: string | string[];
-          error?: string;
-        };
-
-        if (responseBody.message) {
-          message = responseBody.message;
-        }
-
-        if (responseBody.error) {
-          error = responseBody.error;
-        }
-      }
-
-      return response.status(status).json({
-        statusCode: status,
-        error,
-        message,
+    if (exception.code === 'P2025') {
+      return response.status(404).json({
+        statusCode:404,
+        error: 'Not Found',
+        message: 'Resource not found',
         path: request.url,
         timestamp: new Date().toISOString(),
       });
     }
+  }
 
-    return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-      error: 'Internal Server Error',
-      message: 'internal server error',
-      path: request.url,
+    const isHttpException = exception instanceof HttpException;
+
+    const status = isHttpException
+      ? exception.getStatus()
+      : HttpStatus.INTERNAL_SERVER_ERROR;
+
+    const exceptionResponse = isHttpException
+      ? exception.getResponse()
+      : 'Internal server error';
+
+    response.status(status).json({
+      statusCode: status,
       timestamp: new Date().toISOString(),
+      path: request.url,
+      error: exceptionResponse,
     });
   }
 }
