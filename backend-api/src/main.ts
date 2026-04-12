@@ -4,6 +4,7 @@ import { Logger } from 'nestjs-pino';
 import { VersioningType, ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -14,6 +15,8 @@ async function bootstrap() {
   app.use(correlationIdMiddleware.use.bind(correlationIdMiddleware));
 
   app.useLogger(app.get(Logger));
+
+  app.useGlobalFilters(new GlobalExceptionFilter());
 
   app.setGlobalPrefix('api');
 
