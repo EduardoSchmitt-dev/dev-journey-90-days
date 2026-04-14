@@ -1,9 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerGuard } from '@nestjs/throttler';
 
-import { ThrottlerBehindProxyGuard } from './throttler-behind-proxy.guards'; 
+import { ThrottlerBehindProxyGuard } from './throttler-behind-proxy.guards';
 
 @Module({
   imports: [

@@ -8,12 +8,9 @@ export class CreateFeatureDto {
   @MaxLength(100)
   name!: string;
 
-  @ApiProperty({ example: 'Allows user to export reports as PDF'})
+  @ApiProperty({ example: 'Allows user to export reports as PDF' })
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
   description?: string;
 }
-
-  
-

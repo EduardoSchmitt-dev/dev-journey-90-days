@@ -1,5 +1,5 @@
-import { Controller, Get } from "@nestjs/common";
-import { PrismaService } from "../infrastructure/prisma/prisma.service";
+import { Controller, Get } from '@nestjs/common';
+import { PrismaService } from '../infrastructure/prisma/prisma.service';
 
 @Controller({
   path: 'health',
@@ -11,7 +11,7 @@ export class HealthController {
   //LIVENESS
   @Get('live')
   live() {
-    return { 
+    return {
       status: 'alive',
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),
@@ -20,21 +20,21 @@ export class HealthController {
 
   // READINESS
   @Get('ready')
-async ready() {
-  try {
-    await this.prisma.$queryRaw`SELECT 1`;
-    
-    return {
-      success: true,
-      status: 'ready',
-      database: 'connected',
-    };
-  } catch (error) {
-    return {
-      success: false,
-      status: 'not_ready',
-      database: 'disconnected',
-    };
+  async ready() {
+    try {
+      await this.prisma.$queryRaw`SELECT 1`;
+
+      return {
+        success: true,
+        status: 'ready',
+        database: 'connected',
+      };
+    } catch {
+      return {
+        success: false,
+        status: 'not_ready',
+        database: 'disconnected',
+      };
+    }
   }
- }  
 }

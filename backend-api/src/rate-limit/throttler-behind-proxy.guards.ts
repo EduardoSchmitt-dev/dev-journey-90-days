@@ -1,41 +1,37 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ExecutionContext } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
-import type { ExecutionContext } from '@nestjs/common';
+import { RequestWithUser } from '../common/types/request-with-user';
 
 @Injectable()
 export class ThrottlerBehindProxyGuard extends ThrottlerGuard {
-  /**
-   * ✅ Pega IP real por trás de proxy (Render, Nginx, Cloudflare, etc.)
-   */
-protected async getTracker(req: Record<string, any>): Promise<string> {    
-    const xff = (req.headers?.['x-forwarded-for'] as string | undefined) ?? '';
-    const ipFromXff = xff.split(',')[0]?.trim();
-    
-    const ip =
-      ipFromXff ||
-      req.ip ||
-      req.connection?.remoteAddress ||
-      req.socket?.remoteAddress ||
-      'unknown';
+  protected getTracker(req: Record<string, any>): Promise<string> {
+    const request = req as RequestWithUser;
 
-    return ip;
+    const forwardedFor = request.headers['x-forwarded-for'];
+
+    const ip =
+      typeof forwardedFor === 'string'
+        ? forwardedFor.split(',')[0].trim()
+        : (request.socket?.remoteAddress ?? request.ip ?? 'unknown');
+
+    return Promise.resolve(ip);
   }
 
-  /**
-   * ✅ Key inteligente:
-   * - se logado: rate limit por userId + rota (muito melhor)
-   * - se não logado: por IP + rota
-   */
   protected generateKey(
     context: ExecutionContext,
     tracker: string,
     throttlerName?: string,
   ): string {
-    const req = context.switchToHttp().getRequest();
-    const userId = req.user?.id ?? req.user?.sub; // compatível com JWT payloads comuns
-    const routeKey = `${req.method}:${req.originalUrl || req.url}`;
+    const request = context.switchToHttp().getRequest<RequestWithUser>();
 
-    if (userId) return `rl:${throttlerName ?? 'default'}:u:${userId}:${routeKey}`;
+    const userId = request.user?.userId;
+
+    const routeKey = `${request.method}:${request.originalUrl || request.url}`;
+
+    if (userId) {
+      return `rl:${throttlerName ?? 'default'}:u:${userId}:${routeKey}`;
+    }
+
     return `rl:${throttlerName ?? 'default'}:ip:${tracker}:${routeKey}`;
   }
 }

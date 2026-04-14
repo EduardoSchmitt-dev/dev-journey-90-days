@@ -3,10 +3,17 @@ process.env.DATABASE_URL = 'file:./dev.db';
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { AppModule } from '../src/app.module';
+import { AppModule } from './../src/app.module';
+
+interface FeatureResponse {
+  id: number;
+  name: string;
+  description?: string;
+}
 
 describe('Features E2E', () => {
   let app: INestApplication;
+  let server: Parameters<typeof request>[0];
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -15,6 +22,7 @@ describe('Features E2E', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
+    server = app.getHttpServer() as Parameters<typeof request>[0];
   });
 
   afterAll(async () => {
@@ -27,28 +35,25 @@ describe('Features E2E', () => {
       description: 'Created via e2e test',
     };
 
-    // 1️⃣ Create feature
-    const postResponse = await request(app.getHttpServer())
+    const postResponse = await request(server)
       .post('/features')
       .send(createDto)
       .expect(201);
 
-    expect(postResponse.body).toHaveProperty('id');
-    expect(postResponse.body.name).toBe(createDto.name);
+    const createdFeature = postResponse.body as FeatureResponse;
 
-    // 2️⃣ Get all features
-    const getResponse = await request(app.getHttpServer())
-      .get('/features')
-      .expect(200);
+    expect(createdFeature).toHaveProperty('id');
+    expect(createdFeature.name).toBe(createDto.name);
 
-    expect(Array.isArray(getResponse.body)).toBe(true);
+    const getResponse = await request(server).get('/features').expect(200);
 
-    // 3️⃣ Validate created feature is in the list
-    const found = getResponse.body.find(
-      (feature: any) => feature.name === createDto.name,
-    );
+    const features = getResponse.body as FeatureResponse[];
+
+    expect(Array.isArray(features)).toBe(true);
+
+    const found = features.find((feature) => feature.name === createDto.name);
 
     expect(found).toBeDefined();
-    expect(found.description).toBe(createDto.description);
+    expect(found?.description).toBe(createDto.description);
   });
 });

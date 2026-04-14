@@ -1,0 +1,9 @@
+// src/common/types/request-with-user.ts
+
+import { Request } from 'express';
+import { AuthUser } from '../../auth/interfaces/auth-user.interface';
+
+export interface RequestWithUser extends Request {
+  user: AuthUser;
+  requestId?: string;
+}

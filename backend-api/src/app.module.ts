@@ -5,9 +5,11 @@ import { HealthController } from './health/health.controller';
 import { PrismaModule } from './infrastructure/prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { FeaturesModule } from './features/features.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     AuthModule,
     FeaturesModule,

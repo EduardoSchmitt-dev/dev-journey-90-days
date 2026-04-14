@@ -7,7 +7,8 @@ import { ChangeUserPlanUseCase } from './use-cases/change-user-plan.use-case';
 @Module({
   controllers: [UsersController],
   providers: [
-    UsersService, ChangeUserPlanUseCase,
+    UsersService,
+    ChangeUserPlanUseCase,
     {
       provide: 'IUsersRepository',
       useClass: UsersRepository,

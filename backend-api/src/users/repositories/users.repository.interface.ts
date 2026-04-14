@@ -1,4 +1,6 @@
+import { Plan, User } from '@prisma/client';
+
 export interface IUsersRepository {
-  findPlanByName(name: string): Promise<any>;
-  updateUserPlan(userId: number, planId: number): Promise<any>;
+  findPlanByName(name: string): Promise<Plan | null>;
+  updateUserPlan(userId: number, planId: number): Promise<User>;
 }

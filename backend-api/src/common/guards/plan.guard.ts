@@ -7,6 +7,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { PLAN_LIMIT_KEY } from '../decorators/plan-limit.decorator';
+import { RequestWithUser } from '../types/request-with-user';
 
 @Injectable()
 export class PlanGuard implements CanActivate {
@@ -16,7 +17,7 @@ export class PlanGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-      console.log('PlanGuard executado');
+    console.log('PlanGuard executado');
 
     const limit = this.reflector.get<number>(
       PLAN_LIMIT_KEY,
@@ -25,7 +26,7 @@ export class PlanGuard implements CanActivate {
 
     if (!limit) return true;
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<RequestWithUser>();
     const user = request.user;
 
     const userWithPlan = await this.prisma.user.findUnique({

@@ -1,8 +1,8 @@
-import { Module } from "@nestjs/common";
-import { HealthController } from "./health.controller";
-import { PrismaService } from "../infrastructure/prisma/prisma.service";
+import { Module } from '@nestjs/common';
+import { HealthController } from './health.controller';
+import { PrismaService } from '../infrastructure/prisma/prisma.service';
 
-@Module({ 
+@Module({
   controllers: [HealthController],
   providers: [PrismaService],
 })

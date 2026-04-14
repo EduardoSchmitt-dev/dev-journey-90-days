@@ -11,7 +11,10 @@ import { RemoveFeatureUseCase } from './use-cases/remove-feature.use-case';
   imports: [PrismaModule],
   controllers: [FeaturesController],
   providers: [
-    FeaturesService, CreateFeatureUseCase, UpdateFeatureUseCase, RemoveFeatureUseCase,
+    FeaturesService,
+    CreateFeatureUseCase,
+    UpdateFeatureUseCase,
+    RemoveFeatureUseCase,
     {
       provide: 'IFeaturesRepository',
       useClass: PrismaFeaturesRepository,
@@ -19,4 +22,3 @@ import { RemoveFeatureUseCase } from './use-cases/remove-feature.use-case';
   ],
 })
 export class FeaturesModule {}
-

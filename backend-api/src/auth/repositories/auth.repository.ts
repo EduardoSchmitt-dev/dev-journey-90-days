@@ -1,78 +1,80 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma, User, Plan, RefreshToken } from '@prisma/client';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { IAuthRepository } from './auth.repository.interface';
+
+type CreateRefreshTokenInput = Omit<
+  Prisma.RefreshTokenUncheckedCreateInput,
+  'revoked'
+>;
 
 @Injectable()
 export class AuthRepository implements IAuthRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  // USER
-
-  findUserByEmail(email: string) {
+  findUserByEmail(email: string): Promise<User | null> {
     return this.prisma.user.findUnique({
       where: { email },
     });
   }
 
-  updateUser(id: number, data: any) {
+  updateUser(id: number, data: Prisma.UserUpdateInput): Promise<User> {
     return this.prisma.user.update({
       where: { id },
       data,
     });
   }
 
- async createUser(data: any) {
-  const freePlan = await this.prisma.plan.findUnique({
-    where: { name: 'FREE' },
-  });
+  async createUser(data: { email: string; password: string }): Promise<User> {
+    const freePlan = await this.prisma.plan.findUnique({
+      where: { name: 'FREE' },
+    });
 
-  if (!freePlan) {
-    throw new Error('Default FREE plan not found');
+    if (!freePlan) {
+      throw new Error('Default FREE plan not found');
+    }
+
+    return this.prisma.user.create({
+      data: {
+        email: data.email,
+        password: data.password,
+        role: 'FREE',
+        plan: {
+          connect: { id: freePlan.id },
+        },
+      },
+    });
   }
 
-  return this.prisma.user.create({
-    data: {
-      email: data.email,
-      password: data.password,
-      role: 'FREE',
-      plan: {
-        connect: { id: freePlan.id },
-      },
-    },
-  });
-}
-
-  findPlanByName(name: string) {
+  findPlanByName(name: string): Promise<Plan | null> {
     return this.prisma.plan.findUnique({
       where: { name },
     });
   }
 
-  // REFRESH TOKEN
+  createRefreshToken(data: CreateRefreshTokenInput): Promise<RefreshToken> {
+    return this.prisma.refreshToken.create({
+      data: {
+        ...data,
+        revoked: false,
+      },
+    });
+  }
 
- createRefreshToken(data: any) {
-  return this.prisma.refreshToken.create({
-    data: {
-      ...data,
-      revoked: false, // 👈 obrigatório
-    },
-  });
-}
-
-  findRefreshTokenByJti(jti: string) {
+  findRefreshTokenByJti(jti: string): Promise<RefreshToken | null> {
     return this.prisma.refreshToken.findUnique({
       where: { jti },
     });
   }
 
-  revokeFamilyTokens(familyId: string) {
+  revokeFamilyTokens(familyId: string): Promise<Prisma.BatchPayload> {
     return this.prisma.refreshToken.updateMany({
       where: { familyId },
       data: { revokedAt: new Date() },
     });
   }
 
-  revokeToken(jti: string, replacedByJti: string) {
+  revokeToken(jti: string, replacedByJti: string): Promise<RefreshToken> {
     return this.prisma.refreshToken.update({
       where: { jti },
       data: {
@@ -82,11 +84,23 @@ export class AuthRepository implements IAuthRepository {
     });
   }
 
-  createRotatedToken(data: any) {
-    return this.prisma.refreshToken.create({ data });
+  createRotatedToken(data: CreateRefreshTokenInput): Promise<RefreshToken> {
+    return this.prisma.refreshToken.create({
+      data: {
+        ...data,
+        revoked: false,
+      },
+    });
   }
 
-  findActiveSessions(userId: number) {
+  findActiveSessions(userId: number): Promise<
+    Array<{
+      jti: string;
+      ipAddress: string | null;
+      userAgent: string | null;
+      createdAt: Date;
+    }>
+  > {
     return this.prisma.refreshToken.findMany({
       where: {
         userId,
@@ -102,14 +116,14 @@ export class AuthRepository implements IAuthRepository {
     });
   }
 
-  revokeSession(jti: string) {
+  revokeSession(jti: string): Promise<RefreshToken> {
     return this.prisma.refreshToken.update({
       where: { jti },
       data: { revokedAt: new Date() },
     });
   }
 
-  logoutAll(userId: number) {
+  logoutAll(userId: number): Promise<Prisma.BatchPayload> {
     return this.prisma.refreshToken.updateMany({
       where: { userId, revokedAt: null },
       data: { revokedAt: new Date() },

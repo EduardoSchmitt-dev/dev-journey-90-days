@@ -1,7 +1,7 @@
 import 'express';
 
 declare module 'express-serve-static-core' {
-  interface Request { 
+  interface Request {
     requestId?: string;
   }
 }

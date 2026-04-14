@@ -1,53 +1,31 @@
-import {
-  ExceptionFilter,
-  Catch,
-  ArgumentsHost,
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common';
 import { ThrottlerException } from '@nestjs/throttler';
-import { ProgressiveLockService } from '../security/progressive-lock.service';
-import { AppLogger } from '../logger/app-logger.service';
+import { Request, Response } from 'express';
+import { RequestWithUser } from '../types/request-with-user';
 
 @Catch(ThrottlerException)
 export class ThrottlerExceptionFilter implements ExceptionFilter {
-
-  constructor(
-    private readonly progressiveLock: ProgressiveLockService,
-    private readonly logger: AppLogger,
-  ) {}
-
-  async catch(exception: ThrottlerException, host: ArgumentsHost) {
+  catch(exception: ThrottlerException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
-    const response = ctx.getResponse();
-    const request = ctx.getRequest();
+
+    const request = ctx.getRequest<RequestWithUser>();
+    const response = ctx.getResponse<Response>();
+
+    const forwardedFor = request.headers['x-forwarded-for'];
 
     const ip =
-      request.headers['x-forwarded-for'] ||
-      request.ip ||
-      request.socket?.remoteAddress;
+      typeof forwardedFor === 'string'
+        ? forwardedFor.split(',')[0].trim()
+        : (request.socket?.remoteAddress ?? request.ip ?? 'unknown');
 
-    this.logger.warn(
-  'Rate limit abuse detected',
-  'ThrottlerExceptionFilter',
-  {
-    ip,
-    path: request.url,
-    method: request.method,
-  },
-);
-    const key = ip;
-   
-    await this.progressiveLock.registerFailure(key);
-    this.logger.warn(
-      '🚨 Progressive lock applied', 
-      '🚨 ThrottlerExceptionFilter',
-    { ip },
-);
-    
-    response.status(HttpStatus.TOO_MANY_REQUESTS).json({
+    response.status(429).json({
+      success: false,
+      error: 'Too many requests',
       statusCode: 429,
-      message: 'Too many requests. Please slow down.',
+      timestamp: new Date().toISOString(),
+      path: request.url,
+      method: request.method,
+      ip,
     });
   }
 }
