@@ -4,8 +4,6 @@ export type LoginRequest = {
 };
 
 export type LoginResponse = {
-  acessToken: string;
-  refreshToken: string;
+  access_token: string;
+  refresh_token: string;
 };
-
-// this file defines types for the authentication flow in the app
