@@ -43,12 +43,18 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'https://dev-journey-90-days.vercel.app',
+    'https://dev-journey-90-days-b5xnbp2uv-eduardoschmitt-devs-projects.vercel.app',
+  ];
+
   app.enableCors({
-    origin: 'http://localhost:3000',
+    origin: allowedOrigins,
     credentials: true,
   });
 
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 3001;
   await app.listen(port);
 
   console.log(`🚀 Server running on http://localhost:${port}`);
