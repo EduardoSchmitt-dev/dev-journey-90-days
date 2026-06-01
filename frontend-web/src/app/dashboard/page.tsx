@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -24,7 +24,10 @@ export default function DashboardPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [editingFeatureId, setEditingFeatureId] = useState<string | null>(null);
-
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [feedbackType, setFeedbackType] = useState<"success" | "error">(
+    "success",
+  );
   useEffect(() => {
     const token = localStorage.getItem("access_token");
 
@@ -42,12 +45,27 @@ export default function DashboardPage() {
     queryFn: getFeatures,
   });
 
+  function showFeedback(
+    message: string,
+    type: "success" | "error" = "success",
+  ) {
+    setFeedbackMessage(message);
+    setFeedbackType(type);
+  }
+
   const createMutation = useMutation({
     mutationFn: createFeature,
     onSuccess: async () => {
       setName("");
       setDescription("");
+      showFeedback("Feature criada com sucesso.");
       await queryClient.refetchQueries({ queryKey: ["features"] });
+    },
+    onError: () => {
+      showFeedback(
+        "Não foi possível criar a feature. Verifique suas permissões e tente novamente.",
+        "error",
+      );
     },
   });
 
@@ -57,14 +75,22 @@ export default function DashboardPage() {
       setName("");
       setDescription("");
       setEditingFeatureId(null);
+      showFeedback("Feature atualizada com sucesso.");
       await queryClient.refetchQueries({ queryKey: ["features"] });
+    },
+    onError: () => {
+      showFeedback("Não foi possível atualizar a feature.", "error");
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteFeature,
     onSuccess: async () => {
+      showFeedback("Feature excluída com sucesso.");
       await queryClient.refetchQueries({ queryKey: ["features"] });
+    },
+    onError: () => {
+      showFeedback("Não foi possível excluir a feature.", "error");
     },
   });
 
@@ -80,8 +106,9 @@ export default function DashboardPage() {
     router.push("/login");
   }
 
-  function handleSubmitFeature(event: React.FormEvent<HTMLFormElement>) {
+  function handleSubmitFeature(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setFeedbackMessage("");
 
     if (!name.trim()) return;
 
@@ -190,6 +217,18 @@ export default function DashboardPage() {
                 onChange={(e) => setDescription(e.target.value)}
               />
 
+              {feedbackMessage && (
+                <p
+                  className={
+                    feedbackType === "success"
+                      ? "rounded-md bg-green-50 px-3 py-2 text-sm text-green-700"
+                      : "rounded-md bg-red-50 px-3 py-2 text-sm text-red-700"
+                  }
+                >
+                  {feedbackMessage}
+                </p>
+              )}
+
               <div className="flex gap-2">
                 <Button
                   type="submit"
@@ -197,7 +236,13 @@ export default function DashboardPage() {
                     createMutation.isPending || updateMutation.isPending
                   }
                 >
-                  {editingFeatureId ? "Salvar alterações" : "Criar feature"}
+                  {createMutation.isPending
+                    ? "Criando..."
+                    : updateMutation.isPending
+                      ? "Salvando..."
+                      : editingFeatureId
+                        ? "Salvar alterações"
+                        : "Criar feature"}{" "}
                 </Button>
 
                 {editingFeatureId && (
@@ -228,6 +273,21 @@ export default function DashboardPage() {
           <CardContent>
             {isLoading && <p>Carregando...</p>}
 
+            {!isLoading && !isError && features.length === 0 && (
+              <p className="text-sm text-slate-600">
+                Nenhuma feature cadastrada ainda.
+              </p>
+            )}
+
+            {!isLoading &&
+              !isError &&
+              features.length > 0 &&
+              filteredFeatures.length === 0 && (
+                <p className="text-sm text-slate-600">
+                  Nenhuma feature encontrada para essa busca.
+                </p>
+              )}
+
             {!isLoading &&
               filteredFeatures.map((feature) => (
                 <article
@@ -256,6 +316,7 @@ export default function DashboardPage() {
                       <Button
                         variant="destructive"
                         size="sm"
+                        disabled={deleteMutation.isPending}
                         onClick={() => {
                           const confirmed = window.confirm(
                             `Excluir "${feature.name}"?`,
@@ -266,7 +327,7 @@ export default function DashboardPage() {
                           }
                         }}
                       >
-                        Excluir
+                        {deleteMutation.isPending ? "Excluindo..." : "Excluir"}
                       </Button>
                     </div>
                   </div>
