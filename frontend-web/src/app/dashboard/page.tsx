@@ -145,37 +145,56 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-100 p-6">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <header className="flex items-start justify-between gap-4">
-          <div>
-            <Badge variant="outline">SaaS Admin</Badge>
-            <h1 className="mt-3 text-3xl font-bold">Dashboard</h1>
-            <p className="text-sm text-slate-600">
-              Painel operacional para gestão de features.
-            </p>
+    <main className="min-h-screen bg-slate-950 px-4 py-6 text-slate-100 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl space-y-8">
+        <header className="flex flex-col gap-4 rounded-2xl border border-slate-800 bg-slate-900/80 p-6 shadow-lg shadow-black/20 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-3">
+            <Badge
+              variant="outline"
+              className="border-slate-700 text-slate-300"
+            >
+              SaaS Admin
+            </Badge>
+
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                Feature Management
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm text-slate-400">
+                Painel operacional para gerenciar features, acompanhar status da
+                API e validar fluxos administrativos em ambiente fullstack.
+              </p>
+            </div>
           </div>
 
-          <Button variant="outline" onClick={handleLogout}>
+          <Button
+            variant="outline"
+            onClick={handleLogout}
+            className="border-slate-700 bg-slate-950 text-slate-100 hover:bg-slate-800"
+          >
             Sair
           </Button>
         </header>
 
         <section className="grid gap-4 md:grid-cols-3">
-          <Card>
+          <Card className="border-slate-800 bg-slate-900 text-slate-100 shadow-lg shadow-black/10">
             <CardHeader>
-              <CardTitle>Total de features</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-400">
+                Total de features
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-semibold">
+              <p className="text-3xl font-bold">
                 {isLoading ? "..." : features.length}
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-slate-800 bg-slate-900 text-slate-100 shadow-lg shadow-black/10">
             <CardHeader>
-              <CardTitle>Status da API</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-400">
+                Status da API
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <Badge variant={isError ? "destructive" : "default"}>
@@ -184,19 +203,21 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-slate-800 bg-slate-900 text-slate-100 shadow-lg shadow-black/10">
             <CardHeader>
-              <CardTitle>Resultado do filtro</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-400">
+                Resultado do filtro
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-semibold">
+              <p className="text-3xl font-bold">
                 {isLoading ? "..." : filteredFeatures.length}
               </p>
             </CardContent>
           </Card>
         </section>
 
-        <Card>
+        <Card className="border-slate-800 bg-slate-900 text-slate-100 shadow-lg shadow-black/10">
           <CardHeader>
             <CardTitle>
               {editingFeatureId ? "Editar feature" : "Nova feature"}
@@ -209,27 +230,29 @@ export default function DashboardPage() {
                 placeholder="Nome da feature"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                className="border-slate-700 bg-slate-950 text-slate-100 placeholder:text-slate-500"
               />
 
               <Textarea
                 placeholder="Descrição"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                className="min-h-28 border-slate-700 bg-slate-950 text-slate-100 placeholder:text-slate-500"
               />
 
               {feedbackMessage && (
                 <p
                   className={
                     feedbackType === "success"
-                      ? "rounded-md bg-green-50 px-3 py-2 text-sm text-green-700"
-                      : "rounded-md bg-red-50 px-3 py-2 text-sm text-red-700"
+                      ? "rounded-lg border border-emerald-900 bg-emerald-950 px-3 py-2 text-sm text-emerald-300"
+                      : "rounded-lg border border-red-900 bg-red-950 px-3 py-2 text-sm text-red-300"
                   }
                 >
                   {feedbackMessage}
                 </p>
               )}
 
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Button
                   type="submit"
                   disabled={
@@ -242,7 +265,7 @@ export default function DashboardPage() {
                       ? "Salvando..."
                       : editingFeatureId
                         ? "Salvar alterações"
-                        : "Criar feature"}{" "}
+                        : "Criar feature"}
                 </Button>
 
                 {editingFeatureId && (
@@ -250,6 +273,7 @@ export default function DashboardPage() {
                     type="button"
                     variant="outline"
                     onClick={handleCancelEdit}
+                    className="border-slate-700 bg-slate-950 text-slate-100 hover:bg-slate-800"
                   >
                     Cancelar
                   </Button>
@@ -259,56 +283,81 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-slate-800 bg-slate-900 text-slate-100 shadow-lg shadow-black/10">
           <CardHeader className="space-y-4">
-            <CardTitle>Features cadastradas</CardTitle>
+            <div>
+              <CardTitle>Features cadastradas</CardTitle>
+              <p className="mt-1 text-sm text-slate-400">
+                Consulte, edite ou remova features disponíveis no painel.
+              </p>
+            </div>
 
             <Input
               placeholder="Buscar feature..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              className="border-slate-700 bg-slate-950 text-slate-100 placeholder:text-slate-500"
             />
           </CardHeader>
 
-          <CardContent>
-            {isLoading && <p>Carregando...</p>}
+          <CardContent className="space-y-3">
+            {isLoading && (
+              <p className="rounded-lg border border-slate-800 bg-slate-950 p-4 text-sm text-slate-400">
+                Carregando features...
+              </p>
+            )}
 
             {!isLoading && !isError && features.length === 0 && (
-              <p className="text-sm text-slate-600">
-                Nenhuma feature cadastrada ainda.
-              </p>
+              <div className="rounded-lg border border-dashed border-slate-700 bg-slate-950 p-6 text-center">
+                <p className="font-medium text-slate-200">
+                  Nenhuma feature cadastrada ainda.
+                </p>
+                <p className="mt-1 text-sm text-slate-500">
+                  Crie a primeira feature usando o formulário acima.
+                </p>
+              </div>
             )}
 
             {!isLoading &&
               !isError &&
               features.length > 0 &&
               filteredFeatures.length === 0 && (
-                <p className="text-sm text-slate-600">
-                  Nenhuma feature encontrada para essa busca.
-                </p>
+                <div className="rounded-lg border border-dashed border-slate-700 bg-slate-950 p-6 text-center">
+                  <p className="font-medium text-slate-200">
+                    Nenhuma feature encontrada.
+                  </p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Tente buscar por outro nome.
+                  </p>
+                </div>
               )}
 
             {!isLoading &&
               filteredFeatures.map((feature) => (
                 <article
                   key={feature.id}
-                  className="mb-3 rounded-lg border bg-white p-4"
+                  className="rounded-xl border border-slate-800 bg-slate-950 p-4 transition hover:border-slate-700"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="font-semibold">{feature.name}</h3>
-                      <p className="text-sm text-slate-600">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-semibold text-slate-100">
+                          {feature.name}
+                        </h3>
+                        <Badge variant="secondary">Feature</Badge>
+                      </div>
+
+                      <p className="text-sm text-slate-400">
                         {feature.description || "Sem descrição"}
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary">Feature</Badge>
-
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleEditFeature(feature)}
+                        className="border-slate-700 bg-slate-950 text-slate-100 hover:bg-slate-800"
                       >
                         Editar
                       </Button>
