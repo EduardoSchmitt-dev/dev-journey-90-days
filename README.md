@@ -374,15 +374,21 @@ PORT=3001
 
 ## Screenshots
 
-Screenshots will be added after the final UI capture.
+### Login
 
-Recommended screenshots:
+![Login page](docs/screenshots/login.png)
 
-- Login page
-- Protected dashboard
-- Feature creation
-- Feature list with CRUD actions
-- Swagger API documentation
+### Dashboard
+
+![Dashboard](docs/screenshots/dashboard.png)
+
+### Feature Management
+
+![Feature CRUD](docs/screenshots/features-crud.png)
+
+### Swagger
+
+![Swagger docs](docs/screenshots/swagger.png)
 
 ---
 
