@@ -28,6 +28,7 @@ This project was built to practice and demonstrate a production-oriented fullsta
 - Backend deployment on Railway
 - CI/CD through GitHub integrations
 - Professional Git workflow with feature branches and pull requests
+- Local Docker environment with PostgreSQL and NestJS API
 
 The goal is not only to build a CRUD application, but to simulate the structure of a real SaaS admin system.
 
@@ -67,6 +68,7 @@ The goal is not only to build a CRUD application, but to simulate the structure 
 - Global exception handling
 - Request logging
 - CORS configuration for production frontend
+- Docker Compose for local development
 
 ### Frontend
 
@@ -107,6 +109,7 @@ The goal is not only to build a CRUD application, but to simulate the structure 
 - Helmet
 - Pino Logger
 - Jest
+- Docker
 
 ### Infrastructure
 
@@ -115,6 +118,7 @@ The goal is not only to build a CRUD application, but to simulate the structure 
 - PostgreSQL hosted database
 - GitHub
 - CI/CD checks
+- Docker Compose
 
 ---
 
@@ -122,19 +126,14 @@ The goal is not only to build a CRUD application, but to simulate the structure 
 
 ```txt
 dev-journey-90-days
-├── backend-api       # NestJS API, Prisma, PostgreSQL, Swagger
+├── backend-api       # NestJS API, Prisma, PostgreSQL, Swagger, Docker
 ├── frontend-web      # Next.js frontend dashboard
+├── docs/screenshots  # README screenshots
 ├── README.md         # Main project documentation
 ├── day-01.md         # Learning journey notes
 ├── react-basics      # Study materials
 ├── typescript-basics # Study materials
 └── nextjs-app        # Previous learning app
-
-
-
-
-
-
 ```
 
 ---
@@ -190,7 +189,8 @@ DELETE /api/v1/features/:id
 ### Health
 
 ```txt
-GET /health
+GET /api/v1/health/live
+GET /api/v1/health/ready
 ```
 
 Full API documentation is available at:
@@ -210,7 +210,51 @@ git clone https://github.com/EduardoSchmitt-dev/dev-journey-90-days.git
 cd dev-journey-90-days
 ```
 
-### 2. Backend setup
+---
+
+## Running with Docker
+
+The backend can also be started with Docker Compose for local development.
+
+This will start:
+
+- NestJS API
+- PostgreSQL database
+
+```bash
+cd backend-api
+docker compose up --build
+```
+
+Backend API:
+
+```txt
+http://localhost:3001
+```
+
+Swagger Docs:
+
+```txt
+http://localhost:3001/docs
+```
+
+Health Check:
+
+```txt
+http://localhost:3001/api/v1/health/ready
+```
+
+Stop containers:
+
+```bash
+docker compose down
+```
+
+---
+
+## Manual Local Setup
+
+### Backend setup
 
 ```bash
 cd backend-api
@@ -249,7 +293,7 @@ Swagger:
 http://localhost:3001/docs
 ```
 
-### 3. Frontend setup
+### Frontend setup
 
 In another terminal:
 
@@ -315,6 +359,9 @@ The project has been manually validated with the following flows:
 - Feature search/filter
 - Success and error feedback
 - Empty states
+- Docker Compose starts PostgreSQL and NestJS API
+- Docker health check returns database connected
+- Swagger works locally through Docker
 - Production frontend connected to production backend
 - Production backend connected to remote PostgreSQL database
 
@@ -330,6 +377,14 @@ npm run build
 cd backend-api
 npm run lint
 npm run build
+```
+
+Docker validation:
+
+```bash
+cd backend-api
+docker compose up --build
+curl http://localhost:3001/api/v1/health/ready
 ```
 
 ---
@@ -407,6 +462,7 @@ This project helped me practice:
 - Deploying on Railway and Vercel
 - Validating features before merging
 - Maintaining a professional Git workflow
+- Running a local development environment with Docker Compose
 
 ---
 
@@ -421,7 +477,6 @@ Possible next steps:
 - Add role-based UI controls
 - Add audit logs
 - Add custom domain
-- Add screenshots and demo GIF
 - Improve observability and monitoring
 
 ---
